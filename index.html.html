@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demandas do DJUD — painel</title>
+<style>
+:root{
+  --ink:#1B2430; --ink-soft:#41505F; --muted:#78879A; --line:#E4E8EE;
+  --page:#EDF0F4; --card:#FFFFFF; --band:#1B2430; --band-soft:#28323F;
+  --p1:#3B2A6B; --p2:#6B5CA6; --p3:#9A93B8; --pdef:#9AA3AF;
+  --p1-bg:#ECE6F7; --p2-bg:#EFEAF8; --p3-bg:#F2F1F7; --pdef-bg:#F0F1F3;
+  --cx-bx:#1E7A4B; --cx-bx-bg:#E3F1E9; --cx-bx-bd:#BFE3CE;
+  --cx-md:#2F6699; --cx-md-bg:#E4EEF8; --cx-md-bd:#C4DAF0;
+  --cx-al:#A86A0C; --cx-al-bg:#FBEECF; --cx-al-bd:#F0D89A;
+  --cx-mu:#B23A34; --cx-mu-bg:#F8DCDA; --cx-mu-bd:#F0BDB9;
+  --radius:14px; --shadow:0 1px 2px rgba(20,30,45,.06), 0 6px 20px rgba(20,30,45,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink); background:var(--page); font-size:15px; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.tabular{font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+h1,h2,h3{margin:0}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky; top:0; z-index:30; background:var(--band); color:#fff;
+  padding:14px 22px 12px; box-shadow:0 2px 14px rgba(20,30,45,.18)}
+.brandrow{display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap}
+.brand h1{font-size:20px; font-weight:800; letter-spacing:-.02em}
+.brand .sub{color:#AEB9C7; font-size:12.5px; margin-top:1px}
+.spacer{flex:1}
+.stats{display:flex; gap:16px; align-items:center; flex-wrap:wrap; color:#C7D0DB; font-size:12.5px}
+.stat b{color:#fff; font-weight:700}
+.stat .mini{display:inline-flex; gap:5px; align-items:center; margin-left:2px}
+.dotp{display:inline-block; width:9px;height:9px;border-radius:50%}
+.controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.seg{display:inline-flex; background:#111925; border:1px solid #33404F; border-radius:10px; padding:3px}
+.seg button{background:transparent; border:0; color:#B9C3D0; padding:6px 13px; border-radius:7px;
+  font-size:13px; cursor:pointer; letter-spacing:.01em}
+.seg button[aria-pressed="true"]{background:#F5F7FA; color:#1B2430; font-weight:600}
+.field{display:flex; align-items:center; gap:6px}
+.input,.select{background:#111925; border:1px solid #33404F; color:#EAF0F6; border-radius:9px;
+  padding:7px 10px; font-size:13px; outline:none}
+.input::placeholder{color:#7C889A}
+.input:focus,.select:focus{border-color:#6E86A6; box-shadow:0 0 0 3px rgba(110,134,166,.25)}
+.select{appearance:none; padding-right:26px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' fill='none' stroke='%237C889A' stroke-width='1.5'/></svg>");
+  background-repeat:no-repeat; background-position:right 9px center}
+.btn{background:#202A38; border:1px solid #35404F; color:#DCE4EE; padding:7px 12px; border-radius:9px;
+  font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
+.btn:hover{background:#2A3646}
+.btn-primary{background:#F5F7FA; color:#1B2430; border-color:#F5F7FA; font-weight:600}
+.btn-primary:hover{background:#E7ECF2}
+.btn:focus-visible,.seg button:focus-visible{outline:2px solid #8FB0FF; outline-offset:2px}
+
+/* ---------- board ---------- */
+.board{padding:20px 22px 60px; max-width:1500px; margin:0 auto}
+.legend{display:flex; gap:18px; flex-wrap:wrap; align-items:center; color:var(--muted);
+  font-size:12.5px; margin:2px 2px 16px}
+.legend .k{display:inline-flex; align-items:center; gap:7px}
+
+/* coordenação view: seções empilhadas */
+.section{margin-bottom:22px}
+.section-head{display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
+  background:#fff; border:1px solid var(--line); box-shadow:var(--shadow)}
+.section-head .cdot{width:11px;height:11px;border-radius:50%}
+.section-head h2{font-size:14.5px; font-weight:750; letter-spacing:-.01em}
+.section-head .count{color:var(--muted); font-size:12.5px; font-weight:600}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:12px; margin-top:12px}
+
+/* kanban view: colunas */
+.cols{display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; align-items:flex-start}
+.col{flex:0 0 320px; background:#E7EBF1; border:1px solid var(--line); border-radius:14px; padding:10px}
+.col-head{display:flex; align-items:center; gap:8px; padding:4px 6px 10px}
+.col-head .lbl{font-weight:750; font-size:14px}
+.col-head .count{color:var(--muted); font-weight:600; font-size:12.5px}
+.col .grid{grid-template-columns:1fr; gap:10px; margin-top:0}
+.col.drop-on,.section.drop-on .grid{outline:2px dashed #8DA2C6; outline-offset:3px; border-radius:12px}
+
+/* ---------- card ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:13px 13px 12px; box-shadow:var(--shadow); position:relative; cursor:grab;
+  transition:box-shadow .15s ease, transform .12s ease}
+.card:hover{box-shadow:0 2px 6px rgba(20,30,45,.08),0 12px 28px rgba(20,30,45,.12)}
+.card.dragging{opacity:.5; cursor:grabbing}
+.card-top{display:flex; align-items:center; gap:8px; margin-bottom:7px}
+.coordchip{display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft);
+  background:#F1F4F8; border:1px solid var(--line); padding:3px 8px; border-radius:999px}
+.coordchip .cdot{width:8px;height:8px;border-radius:50%}
+.card-actions{margin-left:auto; display:flex; gap:4px; opacity:0; transition:opacity .12s}
+.card:hover .card-actions,.card:focus-within .card-actions{opacity:1}
+.iconbtn{border:1px solid var(--line); background:#fff; width:28px;height:28px;border-radius:8px;
+  cursor:pointer; color:var(--ink-soft); font-size:14px; line-height:1; display:grid; place-items:center}
+.iconbtn:hover{background:#F3F5F8; color:var(--ink)}
+.iconbtn.del:hover{background:#FBE9E7; color:#B23A34; border-color:#F1C7C2}
+.card-title{font-size:14.5px; font-weight:700; letter-spacing:-.01em; line-height:1.28}
+.card-desc{color:var(--ink-soft); font-size:12.8px; margin-top:5px}
+.card-src{color:var(--muted); font-size:11.5px; margin-top:7px; line-height:1.35}
+.card-src b{color:var(--ink-soft); font-weight:600}
+.card-warn{display:inline-block; margin-top:7px; font-size:10.8px; font-weight:700; color:#B23A34;
+  background:#FBE9E7; border:1px solid #F1C7C2; padding:2px 7px; border-radius:6px}
+.badges{display:flex; align-items:center; gap:10px; margin-top:11px; padding-top:11px; border-top:1px dashed var(--line)}
+.prio{display:flex; align-items:center; gap:8px}
+.seal{width:34px;height:34px;border-radius:50%; display:grid; place-items:center; font-weight:800;
+  font-size:16px; border:2px solid currentColor; background:#fff}
+.prio .lbl{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.prio .lbl .v{display:block; color:var(--ink-soft); font-size:11px; letter-spacing:0; text-transform:none; font-weight:600; margin-top:1px}
+.pill{margin-left:auto; display:inline-flex; flex-direction:column; align-items:flex-end; gap:2px}
+.pill .cap{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.pill .chip{font-size:12.5px; font-weight:700; padding:3px 10px; border-radius:999px; border:1px solid}
+/* prioridade cores (selo) */
+.p1{color:var(--p1)} .p2{color:var(--p2)} .p3{color:var(--p3)} .pdef{color:var(--pdef)}
+.p1 .seal{background:var(--p1-bg)} .p2 .seal{background:var(--p2-bg)} .p3 .seal{background:var(--p3-bg)} .pdef .seal{background:var(--pdef-bg); font-size:11px}
+/* complexidade cores (pílula) */
+.cx-Baixa .chip{color:var(--cx-bx); background:var(--cx-bx-bg); border-color:var(--cx-bx-bd)}
+.cx-Média .chip{color:var(--cx-md); background:var(--cx-md-bg); border-color:var(--cx-md-bd)}
+.cx-Alta .chip{color:var(--cx-al); background:var(--cx-al-bg); border-color:var(--cx-al-bd)}
+.cx-Muitoalta .chip{color:var(--cx-mu); background:var(--cx-mu-bg); border-color:var(--cx-mu-bd)}
+.empty{color:#9AA6B4; font-size:12.5px; text-align:center; padding:18px 8px; border:1px dashed var(--line); border-radius:10px}
+
+/* ---------- modal ---------- */
+.backdrop{position:fixed; inset:0; background:rgba(16,22,31,.55); backdrop-filter:blur(2px);
+  display:none; align-items:center; justify-content:center; z-index:50; padding:18px}
+.backdrop.open{display:flex}
+.modal{background:#fff; border-radius:16px; width:min(620px,100%); max-height:92vh; overflow:auto;
+  box-shadow:0 20px 60px rgba(16,22,31,.35)}
+.modal-head{display:flex; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line)}
+.modal-head h3{font-size:16px; font-weight:750}
+.modal-body{padding:16px 20px; display:grid; gap:13px}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:13px}
+label.f{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px}
+.finput,.fselect,.ftext{width:100%; border:1px solid #D6DCE4; border-radius:9px; padding:9px 11px; font-size:14px; color:var(--ink); background:#fff; outline:none}
+.finput:focus,.fselect:focus,.ftext:focus{border-color:#6E86A6; box-shadow:0 0 0 3px rgba(110,134,166,.18)}
+.ftext{min-height:64px; resize:vertical; font-family:inherit}
+.modal-foot{display:flex; gap:10px; align-items:center; padding:14px 20px; border-top:1px solid var(--line)}
+.modal-foot .spacer{flex:1}
+.btn-ghost{background:#fff; border:1px solid var(--line); color:var(--ink-soft); padding:9px 14px; border-radius:9px; cursor:pointer; font-size:14px}
+.btn-ghost:hover{background:#F3F5F8}
+.btn-del{background:#fff; border:1px solid #F1C7C2; color:#B23A34; padding:9px 14px; border-radius:9px; cursor:pointer; font-size:14px}
+.btn-del:hover{background:#FBE9E7}
+.btn-save{background:#1B2430; border:1px solid #1B2430; color:#fff; padding:9px 18px; border-radius:9px; cursor:pointer; font-size:14px; font-weight:600}
+.btn-save:hover{background:#28323F}
+.savednote{position:fixed; bottom:16px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:#1B2430; color:#fff; padding:9px 16px; border-radius:10px; font-size:13px; opacity:0;
+  pointer-events:none; transition:all .25s; z-index:60}
+.savednote.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:640px){ .row2{grid-template-columns:1fr} .board{padding:16px 14px 50px} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brandrow">
+    <div class="brand">
+      <h1>Demandas de dados e monitoramento do DJUD</h1>
+      <div class="sub">Judicialização de medicamentos · painel de priorização</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Agrupar por">
+      <button data-view="coord" aria-pressed="true">Coordenação</button>
+      <button data-view="prio" aria-pressed="false">Prioridade</button>
+      <button data-view="comp" aria-pressed="false">Complexidade</button>
+    </div>
+    <div class="field"><input id="q" class="input" type="search" placeholder="Buscar demanda…" style="width:190px"></div>
+    <select id="fcoord" class="select" aria-label="Filtrar por coordenação"></select>
+    <select id="fprio" class="select" aria-label="Filtrar por prioridade">
+      <option value="">Prioridade: todas</option><option>1</option><option>2</option><option>3</option><option>A definir</option>
+    </select>
+    <select id="fcomp" class="select" aria-label="Filtrar por complexidade">
+      <option value="">Complexidade: todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Muito alta</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="addBtn">＋ Nova demanda</button>
+    <button class="btn" id="fsBtn" title="Tela cheia">⛶ Tela cheia</button>
+    <button class="btn" id="expBtn">Exportar</button>
+    <button class="btn" id="impBtn">Importar</button>
+    <button class="btn" id="resetBtn">Reiniciar</button>
+    <input type="file" id="impFile" accept="application/json" hidden>
+  </div>
+</header>
+
+<main class="board">
+  <div class="legend">
+    <span class="k"><span class="seal p1" style="width:22px;height:22px;font-size:12px;border-width:2px">1</span> Prioridade — número (1 = mais alta), indicada pela área</span>
+    <span class="k"><span class="chip cx-Alta" style="border:1px solid var(--cx-al-bd)">Complexidade</span> — palavra, leitura técnica de esforço e acesso</span>
+    <span class="k" style="color:#9AA6B4">Arraste um card para outro grupo para reclassificar · clique no lápis para editar</span>
+  </div>
+  <div id="boardArea"></div>
+</main>
+
+<!-- modal -->
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-head"><h3 id="mTitle">Editar demanda</h3></div>
+    <div class="modal-body">
+      <div><label class="f" for="mTit">Demanda</label><input id="mTit" class="finput"></div>
+      <div><label class="f" for="mOq">O que entrega</label><textarea id="mOq" class="ftext"></textarea></div>
+      <div class="row2">
+        <div><label class="f" for="mFonte">Fonte (origem do dado)</label><input id="mFonte" class="finput"></div>
+        <div><label class="f" for="mAcesso">Acesso</label><input id="mAcesso" class="finput"></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="mCoord">Coordenação</label><select id="mCoord" class="fselect"></select></div>
+        <div></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="mPrio">Prioridade</label><select id="mPrio" class="fselect"><option>1</option><option>2</option><option>3</option><option>A definir</option></select></div>
+        <div><label class="f" for="mComp">Complexidade</label><select id="mComp" class="fselect"><option>Baixa</option><option>Média</option><option>Alta</option><option>Muito alta</option></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="mObs">Observação da prioridade</label><input id="mObs" class="finput" placeholder="ex.: pedido da diretora"></div>
+        <div><label class="f" for="mWarn">Alerta (opcional)</label><input id="mWarn" class="finput" placeholder="ex.: sem acesso"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-del" id="mDelete">Excluir</button>
+      <div class="spacer"></div>
+      <button class="btn-ghost" id="mCancel">Cancelar</button>
+      <button class="btn-save" id="mSave">Salvar</button>
+    </div>
+  </div>
+</div>
+<div class="savednote" id="savednote">Alterações salvas neste navegador</div>
+
+<script>
+const SEED = [{"id": "d01", "coord": "DIRETORA", "titulo": "Alerta de medicamentos emergenciais (pré-entrada)", "oque": "Avisar a compra urgente antes de o processo entrar no DJUD, para ganhar dias de prazo. Depende de acesso ao Sapiens/EPROC (Justiça/AGU) que ainda não temos.", "fonte": "Sapiens / EPROC (Justiça / AGU)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Alta", "obs": "pedido da diretora", "warn": "sem acesso (Sapiens/EPROC)"}, {"id": "d02", "coord": "DIRETORA", "titulo": "Tempo do processo: entrada e por coordenação", "oque": "Medir quanto o processo leva na entrada e em cada coordenação (Portaria 7676, 30 dias).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Baixa", "obs": "pedido da diretora", "warn": ""}, {"id": "d03", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recuperação dos dados históricos", "oque": "Reconstruir o histórico para permitir projeção de demanda e responder LAI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d04", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Painel de preços-teto (CMED/PMVG)", "oque": "Preço-teto adaptado do DLOG. Nível 1 por caixa (baixa), nível 2 por unidade (média).", "fonte": "Tabela CMED (Anvisa)", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": ""}, {"id": "d05", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Consolidação dos depósitos (FUNDO)", "oque": "Repositório confiável de depósitos; comparar depósito × aquisição.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d06", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Medicamentos mais judicializados (estado/perfil)", "oque": "Ranking por medicamento, estado e perfil; cruzar médico × medicamento.", "fonte": "RedMine (lista interna de processos); Documentos de dentro do processo (SEI)", "acesso": "depende de liberar o acesso; sem acesso hoje", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d07", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recorte por estado (UF) — dimensão reutilizável", "oque": "Deduzir o estado pelo nº CNJ e disponibilizar como dimensão para todos os painéis.", "fonte": "RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": ""}, {"id": "d08", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Alertas automáticos de prazo e pendências", "oque": "Alertas de compra parada, ata a vencer e prazo de resposta de 10 dias.", "fonte": "Compras.gov / PNCP; Web service do SEI (tramitação)", "acesso": "fonte pública, disponível; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d09", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Produção por farmacêutico (+ fila furada)", "oque": "Produtividade por farmacêutico e detecção de quem pega os fáceis fora da ordem.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d10", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Dados do paciente organizados (endereço + peso)", "oque": "Repositório por paciente com o nº do processo como chave, compartilhado com a CGLJUD.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d11", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Repositório de preços de mercado (consultas semanais)", "oque": "Repositório onde os farmacêuticos alimentam/consultam o preço de mercado por medicamento, para padronizar o valor usado nos depósitos.", "fonte": "Fontes externas de consulta de preço (sites/farmácias); Planilhas das áreas (SharePoint)", "acesso": "consulta externa — sites a definir com a Fernanda; depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d12", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Automatizar o painel existente (+ detalhamento)", "oque": "Automatizar a consolidação manual do painel da Gilda/Lara e permitir detalhar.", "fonte": "Planilhas das áreas (SharePoint); Web service do SEI (tramitação); RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d13", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Painel de intimações — coberto pelo SISDJUD", "oque": "Só papel/digitalização hoje. Interim: painel a partir da planilha do Andrei; futuro: SISDJUD.", "fonte": "SISDJUD (novo sistema do DJUD); Planilhas das áreas (SharePoint)", "acesso": "sistema em implantação; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d14", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Reabertura antes do desabastecimento", "oque": "Calcular a data provável de desabastecimento e alertar para reabrir o processo.", "fonte": "Planner (Microsoft); Planilhas das áreas (SharePoint)", "acesso": "acesso já disponível; depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d15", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Lista de processos sob demanda", "oque": "Exportação sob demanda: processos ativos/abertos + números.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "3", "comp": "Baixa", "obs": "", "warn": ""}, {"id": "d16", "coord": "CGLJUD — Logística Judicial", "titulo": "Painel de estoque (SISMAT)", "oque": "Estoque por medicamento cruzado com pacientes ativos, consumo médio e ata vigente.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d17", "coord": "CGLJUD — Logística Judicial", "titulo": "Correção / limpeza da base do SISMAT", "oque": "Separar aquisição × devolução, remover duplicidades, descrever saídas.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d18", "coord": "CGLJUD — Logística Judicial", "titulo": "Remanejamento entre hospitais", "oque": "Trazer para o painel os medicamentos parados em hospitais.", "fonte": "SISMAT (estoque / DLog); Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d19", "coord": "CGLJUD — Logística Judicial", "titulo": "Compras (DFDs) + prioritárias 414 e fracassos", "oque": "Painel de fase e urgência das compras, com recorte das prioritárias e o motivo dos fracassos.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d20", "coord": "CGLJUD — Logística Judicial", "titulo": "Saldo e vencimento das atas", "oque": "Saldo (comprado × executado) + alerta 6 meses antes do vencimento.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": ""}, {"id": "d21", "coord": "CGLJUD — Logística Judicial", "titulo": "Trocas a vencer e incineração", "oque": "Monitorar as cartas de troca e as incinerações.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d22", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Valor de ressarcimento a receber dos estados", "oque": "Quanto cada estado deve ressarcir à União — hoje atualizado à mão.", "fonte": "FNS / SMART; SISMAT (estoque / DLog); Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d23", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Regras de cálculo do ressarcimento (Tema 234)", "oque": "Alíquota por tipo (oncológico ~20%), incorporado ou não, depósito × entrega.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d24", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Relatório quinzenal automático", "oque": "Gerar o quadro que a ASE pede a cada 15 dias a partir do painel.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d25", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Saldo dos repasses a parceiros (TEDs)", "oque": "Saldo e situação dos 6 TEDs, hoje acompanhados à mão no SEI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d26", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Orçamento gasto no ano (SIAFI)", "oque": "Quanto do orçamento já foi gasto no ano, no formato que a diretora usa.", "fonte": "SIAFI (orçamento)", "acesso": "depende de acesso — certificado do Ministério", "prio": "1", "comp": "Baixa", "obs": "ganho rápido", "warn": ""}, {"id": "d27", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Planilha de depósitos preenchida automaticamente", "oque": "Campos já preenchidos pelas coordenações anteriores; a CGPO só põe a data.", "fonte": "Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d28", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Projeção do orçamento até o fim do ano", "oque": "Projetar o gasto até dezembro (itens > R$ 1 mi); alimenta o PLOA.", "fonte": "SIAFI (orçamento); Compras.gov / PNCP", "acesso": "depende de acesso — certificado do Ministério; fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": ""}, {"id": "d29", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Checagem de óbito antes do depósito", "oque": "Conferir por CPF se o paciente faleceu antes de liberar o depósito.", "fonte": "Receita Federal; SIM / DataSUS (óbitos); SIRC (registro civil)", "acesso": "acesso já disponível; depende de liberar o acesso; a explorar", "prio": "3", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d30", "coord": "GABINETE da diretora (assessoria)", "titulo": "Criticidade das demandas externas (alerta)", "oque": "Classificar e alertar as demandas externas (PF, MP, parlamentares).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": ""}, {"id": "d31", "coord": "GABINETE da diretora (assessoria)", "titulo": "Acompanhamento das demandas da assessoria", "oque": "Painel das 3 assessoras: quem está com cada demanda, prazo e situação.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": ""}, {"id": "d32", "coord": "GABINETE da diretora (assessoria)", "titulo": "Análise das condenações por danos morais", "oque": "Condenações cruzadas com o tempo no DJUD e o tipo de medicamento.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": ""}, {"id": "d33", "coord": "GABINETE da diretora (assessoria)", "titulo": "Painel público de dados (LAI)", "oque": "Painel público com as informações mais pedidas na LAI.", "fonte": "Documentos de dentro do processo (SEI); RedMine (lista interna de processos)", "acesso": "sem acesso hoje; depende de liberar o acesso", "prio": "3", "comp": "Muito alta", "obs": "", "warn": ""}, {"id": "d34", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de Notas Técnicas (SDJud)", "oque": "Banco de notas técnicas do SDJud — atenção: ≠ SISDJUD. Demanda do TCU/Conjur.", "fonte": "SDJud (banco de notas técnicas)", "acesso": "a definir", "prio": "A definir", "comp": "Média", "obs": "", "warn": "≠ SISDJUD · em paralelo"}, {"id": "d35", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de respostas / LAI (repositório pesquisável)", "oque": "Modelo de planilha/repositório pesquisável p/ as assessoras: saber se um tema já foi respondido e reusar a resposta.", "fonte": "Planilhas das áreas (SharePoint); SISDJUD (novo sistema do DJUD)", "acesso": "depende de liberar o acesso; sistema em implantação", "prio": "1", "comp": "Média", "obs": "", "warn": ""}];
+const COORDS = [{"full": "DIRETORA", "short": "Diretora", "dot": "#6B7280"}, {"full": "TRANSVERSAIS (afetam várias áreas)", "short": "Transversais", "dot": "#7C6BAF"}, {"full": "CGMED — Coordenação Médica e Farmacêutica", "short": "CGMED", "dot": "#2E8B8B"}, {"full": "CGAJUD — Análise e Monitoramento", "short": "CGAJUD", "dot": "#C77D3C"}, {"full": "CGLJUD — Logística Judicial", "short": "CGLJUD", "dot": "#3E7CB1"}, {"full": "CGPJUD — Ressarcimento pelos estados", "short": "CGPJUD", "dot": "#B0577A"}, {"full": "CGPO — Planejamento e Orçamento", "short": "CGPO", "dot": "#4E9A6B"}, {"full": "GABINETE da diretora (assessoria)", "short": "Gabinete", "dot": "#9A7B4F"}];
+const PRIOS = ['1','2','3','A definir'];
+const COMPS = ['Baixa','Média','Alta','Muito alta'];
+const KEY = 'djud_demandas_v2';
+
+const shortOf = f => (COORDS.find(c=>c.full===f)||{}).short || f;
+const dotOf   = f => (COORDS.find(c=>c.full===f)||{}).dot || '#94A3B8';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+let DATA = load();
+let view = 'coord';
+let dragId = null;
+
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw) return JSON.parse(raw); }catch(e){}
+  return JSON.parse(JSON.stringify(SEED));
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(DATA)); toast(); }catch(e){}
+}
+let toastT;
+function toast(){ const n=document.getElementById('savednote'); n.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>n.classList.remove('show'),1400); }
+
+/* ---------- filtros ---------- */
+const F = {q:'',coord:'',prio:'',comp:''};
+function filtered(){
+  return DATA.filter(c=>{
+    if(F.coord && c.coord!==F.coord) return false;
+    if(F.prio && c.prio!==F.prio) return false;
+    if(F.comp && c.comp!==F.comp) return false;
+    if(F.q){ const t=(c.titulo+' '+c.oque+' '+c.fonte).toLowerCase(); if(!t.includes(F.q.toLowerCase())) return false; }
+    return true;
+  });
+}
+
+/* ---------- classes de prioridade ---------- */
+function prioClass(p){ return p==='1'?'p1':p==='2'?'p2':p==='3'?'p3':'pdef'; }
+function compClass(c){ return 'cx-'+String(c).replace(' ',''); }
+
+/* ---------- card ---------- */
+function cardEl(c){
+  const el = document.createElement('article');
+  el.className='card'; el.draggable=true; el.dataset.id=c.id; el.tabIndex=0;
+  const pc = prioClass(c.prio);
+  el.innerHTML = `
+    <div class="card-top">
+      <span class="coordchip"><span class="cdot" style="background:${dotOf(c.coord)}"></span>${esc(shortOf(c.coord))}</span>
+      <div class="card-actions">
+        <button class="iconbtn" title="Editar" aria-label="Editar" data-act="edit">✎</button>
+        <button class="iconbtn del" title="Excluir" aria-label="Excluir" data-act="del">🗑</button>
+      </div>
+    </div>
+    <div class="card-title">${esc(c.titulo)}</div>
+    ${c.oque?`<div class="card-desc">${esc(c.oque)}</div>`:''}
+    ${c.fonte?`<div class="card-src"><b>Fonte:</b> ${esc(c.fonte)}${c.acesso?` — ${esc(c.acesso)}`:''}</div>`:''}
+    ${c.warn?`<span class="card-warn">${esc(c.warn.replace('≠','≠'))}</span>`:''}
+    <div class="badges">
+      <div class="prio ${pc}">
+        <span class="seal">${esc(c.prio==='A definir'?'—':c.prio)}</span>
+        <span class="lbl">Prioridade<span class="v">${c.prio==='A definir'?'a definir':(c.prio==='1'?'mais alta':c.prio==='2'?'intermediária':'mais baixa')}</span></span>
+      </div>
+      <div class="pill ${compClass(c.comp)}">
+        <span class="cap">Complexidade</span>
+        <span class="chip">${esc(c.comp)}</span>
+      </div>
+    </div>`;
+  el.addEventListener('dragstart',e=>{dragId=c.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move';});
+  el.addEventListener('dragend',()=>{dragId=null; el.classList.remove('dragging'); document.querySelectorAll('.drop-on').forEach(x=>x.classList.remove('drop-on'));});
+  el.querySelector('[data-act=edit]').addEventListener('click',ev=>{ev.stopPropagation(); openEdit(c.id);});
+  el.querySelector('[data-act=del]').addEventListener('click',ev=>{ev.stopPropagation(); removeCard(c.id);});
+  el.addEventListener('dblclick',()=>openEdit(c.id));
+  return el;
+}
+
+/* ---------- ordenação dentro do grupo ---------- */
+const prioRank = p => ({'1':0,'2':1,'3':2,'A definir':3}[p] ?? 4);
+const coordRank = f => { const i=COORDS.findIndex(c=>c.full===f); return i<0?99:i; };
+function sortCards(list, by){
+  return list.slice().sort((a,b)=>{
+    if(by==='coord') return prioRank(a.prio)-prioRank(b.prio) || a.titulo.localeCompare(b.titulo,'pt');
+    if(by==='prio')  return coordRank(a.coord)-coordRank(b.coord) || a.titulo.localeCompare(b.titulo,'pt');
+    return prioRank(a.prio)-prioRank(b.prio) || a.titulo.localeCompare(b.titulo,'pt');
+  });
+}
+
+/* ---------- render ---------- */
+function render(){
+  const area = document.getElementById('boardArea');
+  area.innerHTML='';
+  const items = filtered();
+
+  if(view==='coord'){
+    COORDS.forEach(co=>{
+      const cs = sortCards(items.filter(c=>c.coord===co.full),'coord');
+      const sec = document.createElement('section'); sec.className='section';
+      sec.dataset.dim='coord'; sec.dataset.val=co.full;
+      sec.innerHTML=`<div class="section-head"><span class="cdot" style="background:${co.dot}"></span>
+        <h2>${esc(co.full)}</h2><span class="count">${cs.length}</span></div>
+        <div class="grid"></div>`;
+      const grid=sec.querySelector('.grid');
+      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c)));
+      else grid.innerHTML='<div class="empty">Sem demandas nesta coordenação</div>';
+      wireDrop(sec,'coord',co.full);
+      area.appendChild(sec);
+    });
+  } else {
+    const vals = view==='prio'?PRIOS:COMPS;
+    const wrap=document.createElement('div'); wrap.className='cols';
+    vals.forEach(v=>{
+      const cs = sortCards(items.filter(c=> (view==='prio'?c.prio:c.comp)===v), view);
+      const col=document.createElement('div'); col.className='col'; col.dataset.dim=view; col.dataset.val=v;
+      const label = view==='prio' ? ('Prioridade '+v) : v;
+      col.innerHTML=`<div class="col-head"><span class="lbl">${esc(label)}</span><span class="count">${cs.length}</span></div><div class="grid"></div>`;
+      const grid=col.querySelector('.grid');
+      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c)));
+      else grid.innerHTML='<div class="empty">Arraste demandas para cá</div>';
+      wireDrop(col,view,v);
+      wrap.appendChild(col);
+    });
+    area.appendChild(wrap);
+  }
+  renderStats();
+}
+
+function wireDrop(zone,dim,val){
+  zone.addEventListener('dragover',e=>{e.preventDefault(); zone.classList.add('drop-on');});
+  zone.addEventListener('dragleave',e=>{ if(!zone.contains(e.relatedTarget)) zone.classList.remove('drop-on'); });
+  zone.addEventListener('drop',e=>{
+    e.preventDefault(); zone.classList.remove('drop-on');
+    if(!dragId) return;
+    const c = DATA.find(x=>x.id===dragId); if(!c) return;
+    if(dim==='coord') c.coord=val; else if(dim==='prio') c.prio=val; else c.comp=val;
+    save(); render();
+  });
+}
+
+function renderStats(){
+  const n=DATA.length;
+  const p=v=>DATA.filter(c=>c.prio===v).length;
+  const cx=v=>DATA.filter(c=>c.comp===v).length;
+  document.getElementById('stats').innerHTML=`
+    <span class="stat"><b>${n}</b> demandas</span>
+    <span class="stat">Prioridade&nbsp; <span class="mini"><span class="dotp" style="background:var(--p1)"></span><b>${p('1')}</b>·1</span>
+      <span class="mini"><span class="dotp" style="background:var(--p2)"></span><b>${p('2')}</b>·2</span>
+      <span class="mini"><span class="dotp" style="background:var(--p3)"></span><b>${p('3')}</b>·3</span></span>
+    <span class="stat">Complexidade&nbsp;
+      <span class="mini"><span class="dotp" style="background:var(--cx-bx)"></span><b>${cx('Baixa')}</b></span>
+      <span class="mini"><span class="dotp" style="background:var(--cx-md)"></span><b>${cx('Média')}</b></span>
+      <span class="mini"><span class="dotp" style="background:var(--cx-al)"></span><b>${cx('Alta')}</b></span>
+      <span class="mini"><span class="dotp" style="background:var(--cx-mu)"></span><b>${cx('Muito alta')}</b></span></span>`;
+}
+
+/* ---------- editar / novo ---------- */
+let editing=null;
+function fillCoordSelects(){
+  const opts = COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)} — ${esc(c.full)}</option>`).join('');
+  document.getElementById('mCoord').innerHTML=opts;
+  document.getElementById('fcoord').innerHTML='<option value="">Coordenação: todas</option>'+
+    COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)}</option>`).join('');
+}
+function openEdit(id){
+  editing = id ? DATA.find(c=>c.id===id) : null;
+  document.getElementById('mTitle').textContent = editing?'Editar demanda':'Nova demanda';
+  document.getElementById('mDelete').style.display = editing?'inline-block':'none';
+  const g=id?editing:{coord:COORDS[0].full,titulo:'',oque:'',fonte:'',acesso:'',prio:'A definir',comp:'Média',obs:'',warn:''};
+  mTit.value=g.titulo; mOq.value=g.oque; mFonte.value=g.fonte; mAcesso.value=g.acesso;
+  mCoord.value=g.coord; mPrio.value=g.prio; mComp.value=g.comp; mObs.value=g.obs||''; mWarn.value=g.warn||'';
+  document.getElementById('backdrop').classList.add('open');
+  setTimeout(()=>mTit.focus(),30);
+}
+function closeEdit(){ document.getElementById('backdrop').classList.remove('open'); editing=null; }
+function saveEdit(){
+  const g={coord:mCoord.value,titulo:mTit.value.trim()||'(sem título)',oque:mOq.value.trim(),
+    fonte:mFonte.value.trim(),acesso:mAcesso.value.trim(),prio:mPrio.value,comp:mComp.value,
+    obs:mObs.value.trim(),warn:mWarn.value.trim()};
+  if(editing){ Object.assign(editing,g); }
+  else { g.id='d'+Date.now().toString(36); DATA.push(g); }
+  save(); closeEdit(); render();
+}
+function removeCard(id){
+  const c=DATA.find(x=>x.id===id); if(!c) return;
+  if(confirm('Excluir a demanda “'+c.titulo+'”?')){ DATA=DATA.filter(x=>x.id!==id); save(); render(); }
+}
+
+/* ---------- exportar / importar ---------- */
+function download(name,txt,type){ const b=new Blob([txt],{type}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u); }
+function exportMenu(){
+  const csv=['coordenacao,demanda,prioridade,complexidade,fonte,acesso']
+    .concat(DATA.map(c=>[c.coord,c.titulo,c.prio,c.comp,c.fonte,c.acesso]
+      .map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','))).join('\n');
+  download('demandas_djud.json', JSON.stringify(DATA,null,1),'application/json');
+  download('demandas_djud.csv', '\ufeff'+csv,'text/csv');
+}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+  view=b.dataset.view;
+  document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+  render();
+}));
+document.getElementById('q').addEventListener('input',e=>{F.q=e.target.value; render();});
+document.getElementById('fcoord').addEventListener('change',e=>{F.coord=e.target.value; render();});
+document.getElementById('fprio').addEventListener('change',e=>{F.prio=e.target.value; render();});
+document.getElementById('fcomp').addEventListener('change',e=>{F.comp=e.target.value; render();});
+document.getElementById('addBtn').addEventListener('click',()=>openEdit(null));
+document.getElementById('mSave').addEventListener('click',saveEdit);
+document.getElementById('mCancel').addEventListener('click',closeEdit);
+document.getElementById('mDelete').addEventListener('click',()=>{ if(editing){const id=editing.id; closeEdit(); removeCard(id);} });
+document.getElementById('backdrop').addEventListener('click',e=>{ if(e.target.id==='backdrop') closeEdit(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeEdit(); });
+document.getElementById('expBtn').addEventListener('click',exportMenu);
+document.getElementById('impBtn').addEventListener('click',()=>document.getElementById('impFile').click());
+document.getElementById('impFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d)){ DATA=d.map((c,i)=>({id:c.id||('d'+i),...c})); save(); render(); } else alert('Arquivo inválido.'); }catch(err){ alert('Não consegui ler o arquivo.'); } };
+  r.readAsText(f); e.target.value='';
+});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(confirm('Reiniciar para a versão original? Isso descarta as alterações feitas aqui.')){
+    DATA=JSON.parse(JSON.stringify(SEED)); save(); render();
+  }
+});
+document.getElementById('fsBtn').addEventListener('click',()=>{
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.();
+});
+
+fillCoordSelects();
+render();
+</script>
+</body>
+</html>
