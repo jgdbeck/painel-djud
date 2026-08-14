@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Demandas do DJUD — painel</title>
+<title>Painel DJUD — priorização e acompanhamento</title>
 <style>
 :root{
   --ink:#1B2430; --ink-soft:#41505F; --muted:#78879A; --line:#E4E8EE;
@@ -14,203 +14,235 @@
   --cx-md:#2F6699; --cx-md-bg:#E4EEF8; --cx-md-bd:#C4DAF0;
   --cx-al:#A86A0C; --cx-al-bg:#FBEECF; --cx-al-bd:#F0D89A;
   --cx-mu:#B23A34; --cx-mu-bg:#F8DCDA; --cx-mu-bd:#F0BDB9;
-  --st-nao:#8A8F98; --st-nao-bg:#EEF0F3;
-  --st-and:#A86A0C; --st-and-bg:#FBEECF;
-  --st-con:#1E7A4B; --st-con-bg:#E3F1E9;
-  --exec:#2E8B6B;
-  --radius:14px; --shadow:0 1px 2px rgba(20,30,45,.06), 0 6px 20px rgba(20,30,45,.06);
+  --st-nao:#8A8F98; --st-nao-bg:#EEF0F3; --st-and:#A86A0C; --st-and-bg:#FBEECF; --st-con:#1E7A4B; --st-con-bg:#E3F1E9;
+  --exec:#2E8B6B; --radius:14px; --shadow:0 1px 2px rgba(20,30,45,.06),0 6px 20px rgba(20,30,45,.06);
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  color:var(--ink); background:var(--page); font-size:15px; line-height:1.45; -webkit-font-smoothing:antialiased}
-button{font-family:inherit}
-h1,h2,h3{margin:0}
-.tabular{font-variant-numeric:tabular-nums}
+*{box-sizing:border-box} html,body{margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--page);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font-family:inherit} h1,h2,h3{margin:0} .tabular{font-variant-numeric:tabular-nums}
+.hidden{display:none !important}
 
-.topbar{position:sticky; top:0; z-index:30; background:var(--band); color:#fff; padding:14px 22px 12px; box-shadow:0 2px 14px rgba(20,30,45,.18)}
-.brandrow{display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap}
-.brand h1{font-size:20px; font-weight:800; letter-spacing:-.02em}
-.brand .sub{color:#AEB9C7; font-size:12.5px; margin-top:1px}
+.topbar{position:sticky;top:0;z-index:30;background:var(--band);color:#fff;padding:12px 22px;box-shadow:0 2px 14px rgba(20,30,45,.18)}
+.tbrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;cursor:pointer}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#3B2A6B,#2E8B8B);display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;letter-spacing:.02em}
+.brand h1{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.brand .sub{color:#AEB9C7;font-size:11.5px}
+.nav{display:flex;gap:4px;background:#111925;border:1px solid #33404F;border-radius:10px;padding:3px}
+.nav button{background:transparent;border:0;color:#B9C3D0;padding:7px 14px;border-radius:7px;font-size:13.5px;cursor:pointer}
+.nav button[aria-current="true"]{background:#F5F7FA;color:#1B2430;font-weight:600}
 .spacer{flex:1}
-.stats{display:flex; gap:16px; align-items:center; flex-wrap:wrap; color:#C7D0DB; font-size:12.5px}
-.stat b{color:#fff; font-weight:700}
-.stat .mini{display:inline-flex; gap:5px; align-items:center; margin-left:2px}
-.dotp{display:inline-block; width:9px;height:9px;border-radius:50%}
-.controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px}
-.seg{display:inline-flex; background:#111925; border:1px solid #33404F; border-radius:10px; padding:3px}
-.seg button{background:transparent; border:0; color:#B9C3D0; padding:6px 13px; border-radius:7px; font-size:13px; cursor:pointer}
-.seg button[aria-pressed="true"]{background:#F5F7FA; color:#1B2430; font-weight:600}
-.input,.select{background:#111925; border:1px solid #33404F; color:#EAF0F6; border-radius:9px; padding:7px 10px; font-size:13px; outline:none}
-.input::placeholder{color:#7C889A}
-.input:focus,.select:focus{border-color:#6E86A6; box-shadow:0 0 0 3px rgba(110,134,166,.25)}
-.select{appearance:none; padding-right:26px;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' fill='none' stroke='%237C889A' stroke-width='1.5'/></svg>");
-  background-repeat:no-repeat; background-position:right 9px center}
-.btn{background:#202A38; border:1px solid #35404F; color:#DCE4EE; padding:7px 12px; border-radius:9px; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px}
+.who{color:#C7D0DB;font-size:12.5px;display:flex;align-items:center;gap:9px}
+.who b{color:#fff}
+.btn{background:#202A38;border:1px solid #35404F;color:#DCE4EE;padding:7px 12px;border-radius:9px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{background:#2A3646}
-.btn-primary{background:#F5F7FA; color:#1B2430; border-color:#F5F7FA; font-weight:600}
+.btn-primary{background:#F5F7FA;color:#1B2430;border-color:#F5F7FA;font-weight:600}
 .btn-primary:hover{background:#E7ECF2}
-.btn:focus-visible,.seg button:focus-visible{outline:2px solid #8FB0FF; outline-offset:2px}
+.btn:focus-visible,.nav button:focus-visible,.seg button:focus-visible{outline:2px solid #8FB0FF;outline-offset:2px}
+.modebadge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:700}
+.mode-demo{background:#3A2E12;color:#F0C86A;border:1px solid #6b5320}
+.mode-live{background:#12352a;color:#7FE0B4;border:1px solid #1f6b50}
 
-.board{padding:20px 22px 60px; max-width:1500px; margin:0 auto}
-.legend{display:flex; gap:18px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:12.5px; margin:2px 2px 16px}
-.legend .k{display:inline-flex; align-items:center; gap:7px}
+.wrap{max-width:1500px;margin:0 auto;padding:22px}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{background:transparent;border:0;color:var(--ink-soft);padding:6px 13px;border-radius:7px;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--band);color:#fff;font-weight:600}
+.input,.select{background:#fff;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:7px 10px;font-size:13px;outline:none}
+.input:focus,.select:focus{border-color:#6E86A6;box-shadow:0 0 0 3px rgba(110,134,166,.15)}
+.select{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' fill='none' stroke='%237C889A' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
 
+/* ---------- HOME ---------- */
+.hero{background:linear-gradient(135deg,#1B2430,#243244 60%,#1f3a37);color:#fff;border-radius:20px;padding:38px 40px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(46,139,139,.35),transparent 70%)}
+.hero .eyebrow{color:#8FE0C4;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.hero h2{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:8px;max-width:760px;line-height:1.15}
+.hero p{color:#C4CFDB;font-size:15px;max-width:680px;margin-top:12px}
+.hero .cta{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.cta-btn{display:flex;align-items:center;gap:12px;background:#fff;color:#1B2430;border:0;border-radius:14px;padding:15px 20px;cursor:pointer;text-align:left;min-width:230px}
+.cta-btn:hover{transform:translateY(-1px)}
+.cta-btn .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+.cta-btn.b1 .ic{background:var(--p1-bg);color:var(--p1)} .cta-btn.b2 .ic{background:var(--cx-bx-bg);color:var(--cx-bx)}
+.cta-btn .t{font-weight:750;font-size:15px} .cta-btn .d{color:#5A6472;font-size:12.5px}
+.home-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+@media (max-width:900px){.home-grid{grid-template-columns:1fr}}
+.about{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
+.about h3{font-size:14px;font-weight:750;margin-bottom:8px}
+.about p{color:var(--ink-soft);font-size:13.5px;margin:0 0 10px}
+.about ul{margin:0;padding-left:18px;color:var(--ink-soft);font-size:13.5px}
+.about li{margin:4px 0}
+
+/* ---------- board / cards / dash (herdado) ---------- */
+.legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;margin:2px 2px 16px}
+.legend .k{display:inline-flex;align-items:center;gap:7px}
 .section{margin-bottom:22px}
-.section-head{display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; background:#fff; border:1px solid var(--line); box-shadow:var(--shadow)}
+.section-head{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
 .section-head .cdot{width:11px;height:11px;border-radius:50%}
-.section-head h2{font-size:14.5px; font-weight:750; letter-spacing:-.01em}
-.section-head .count{color:var(--muted); font-size:12.5px; font-weight:600}
-.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:12px; margin-top:12px}
-.cols{display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; align-items:flex-start}
-.col{flex:0 0 320px; background:#E7EBF1; border:1px solid var(--line); border-radius:14px; padding:10px}
-.col-head{display:flex; align-items:center; gap:8px; padding:4px 6px 10px}
-.col-head .lbl{font-weight:750; font-size:14px}
-.col-head .count{color:var(--muted); font-weight:600; font-size:12.5px}
-.col .grid{grid-template-columns:1fr; gap:10px; margin-top:0}
-.col.drop-on,.section.drop-on .grid{outline:2px dashed #8DA2C6; outline-offset:3px; border-radius:12px}
-
-.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:13px 13px 12px; box-shadow:var(--shadow); position:relative; cursor:grab; transition:box-shadow .15s ease}
+.section-head h2{font-size:14.5px;font-weight:750}
+.section-head .count{color:var(--muted);font-size:12.5px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px;margin-top:12px}
+.cols{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.col{flex:0 0 320px;background:#E7EBF1;border:1px solid var(--line);border-radius:14px;padding:10px}
+.col-head{display:flex;align-items:center;gap:8px;padding:4px 6px 10px}
+.col-head .lbl{font-weight:750;font-size:14px} .col-head .count{color:var(--muted);font-weight:600;font-size:12.5px}
+.col .grid{grid-template-columns:1fr;gap:10px;margin-top:0}
+.col.drop-on,.section.drop-on .grid{outline:2px dashed #8DA2C6;outline-offset:3px;border-radius:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:13px;box-shadow:var(--shadow);position:relative;cursor:grab;transition:box-shadow .15s}
 .card:hover{box-shadow:0 2px 6px rgba(20,30,45,.08),0 12px 28px rgba(20,30,45,.12)}
-.card.dragging{opacity:.5; cursor:grabbing}
-.card-top{display:flex; align-items:center; gap:8px; margin-bottom:7px}
-.coordchip{display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); background:#F1F4F8; border:1px solid var(--line); padding:3px 8px; border-radius:999px}
+.card.dragging{opacity:.5}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.coordchip{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);background:#F1F4F8;border:1px solid var(--line);padding:3px 8px;border-radius:999px}
 .coordchip .cdot{width:8px;height:8px;border-radius:50%}
-.card-actions{margin-left:auto; display:flex; gap:4px; opacity:0; transition:opacity .12s}
+.card-actions{margin-left:auto;display:flex;gap:4px;opacity:0;transition:opacity .12s}
 .card:hover .card-actions,.card:focus-within .card-actions{opacity:1}
-.iconbtn{border:1px solid var(--line); background:#fff; width:28px;height:28px;border-radius:8px; cursor:pointer; color:var(--ink-soft); font-size:14px; line-height:1; display:grid; place-items:center}
-.iconbtn:hover{background:#F3F5F8; color:var(--ink)}
-.iconbtn.del:hover{background:#FBE9E7; color:#B23A34; border-color:#F1C7C2}
-.card-title{font-size:14.5px; font-weight:700; letter-spacing:-.01em; line-height:1.28}
-.card-desc{color:var(--ink-soft); font-size:12.8px; margin-top:5px}
-.card-src{color:var(--muted); font-size:11.5px; margin-top:7px; line-height:1.35}
-.card-src b{color:var(--ink-soft); font-weight:600}
-.card-warn{display:inline-block; margin-top:7px; font-size:10.8px; font-weight:700; color:#B23A34; background:#FBE9E7; border:1px solid #F1C7C2; padding:2px 7px; border-radius:6px}
-.badges{display:flex; align-items:center; gap:10px; margin-top:11px; padding-top:11px; border-top:1px dashed var(--line)}
-.prio{display:flex; align-items:center; gap:8px}
-.seal{width:34px;height:34px;border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:16px; border:2px solid currentColor; background:#fff}
-.prio .lbl{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
-.prio .lbl .v{display:block; color:var(--ink-soft); font-size:11px; letter-spacing:0; text-transform:none; font-weight:600; margin-top:1px}
-.pill{margin-left:auto; display:inline-flex; flex-direction:column; align-items:flex-end; gap:2px}
-.pill .cap{font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
-.pill .chip{font-size:12.5px; font-weight:700; padding:3px 10px; border-radius:999px; border:1px solid}
+.iconbtn{border:1px solid var(--line);background:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;color:var(--ink-soft);font-size:14px;display:grid;place-items:center}
+.iconbtn:hover{background:#F3F5F8;color:var(--ink)} .iconbtn.del:hover{background:#FBE9E7;color:#B23A34;border-color:#F1C7C2}
+.card-title{font-size:14.5px;font-weight:700;line-height:1.28}
+.card-desc{color:var(--ink-soft);font-size:12.8px;margin-top:5px}
+.card-src{color:var(--muted);font-size:11.5px;margin-top:7px;line-height:1.35}
+.card-src b{color:var(--ink-soft);font-weight:600}
+.card-warn{display:inline-block;margin-top:7px;font-size:10.8px;font-weight:700;color:#B23A34;background:#FBE9E7;border:1px solid #F1C7C2;padding:2px 7px;border-radius:6px}
+.badges{display:flex;align-items:center;gap:10px;margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
+.prio{display:flex;align-items:center;gap:8px}
+.seal{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;border:2px solid currentColor;background:#fff}
+.prio .lbl{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.prio .lbl .v{display:block;color:var(--ink-soft);font-size:11px;letter-spacing:0;text-transform:none;font-weight:600;margin-top:1px}
+.pill{margin-left:auto;display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pill .cap{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.pill .chip{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid}
 .p1{color:var(--p1)} .p2{color:var(--p2)} .p3{color:var(--p3)} .pdef{color:var(--pdef)}
-.p1 .seal{background:var(--p1-bg)} .p2 .seal{background:var(--p2-bg)} .p3 .seal{background:var(--p3-bg)} .pdef .seal{background:var(--pdef-bg); font-size:11px}
-.cx-Baixa .chip{color:var(--cx-bx); background:var(--cx-bx-bg); border-color:var(--cx-bx-bd)}
-.cx-Média .chip{color:var(--cx-md); background:var(--cx-md-bg); border-color:var(--cx-md-bd)}
-.cx-Alta .chip{color:var(--cx-al); background:var(--cx-al-bg); border-color:var(--cx-al-bd)}
-.cx-Muitoalta .chip{color:var(--cx-mu); background:var(--cx-mu-bg); border-color:var(--cx-mu-bd)}
-.empty{color:#9AA6B4; font-size:12.5px; text-align:center; padding:18px 8px; border:1px dashed var(--line); border-radius:10px}
+.p1 .seal{background:var(--p1-bg)} .p2 .seal{background:var(--p2-bg)} .p3 .seal{background:var(--p3-bg)} .pdef .seal{background:var(--pdef-bg);font-size:11px}
+.cx-Baixa .chip{color:var(--cx-bx);background:var(--cx-bx-bg);border-color:var(--cx-bx-bd)}
+.cx-Média .chip{color:var(--cx-md);background:var(--cx-md-bg);border-color:var(--cx-md-bd)}
+.cx-Alta .chip{color:var(--cx-al);background:var(--cx-al-bg);border-color:var(--cx-al-bd)}
+.cx-Muitoalta .chip{color:var(--cx-mu);background:var(--cx-mu-bg);border-color:var(--cx-mu-bd)}
+.empty{color:#9AA6B4;font-size:12.5px;text-align:center;padding:18px 8px;border:1px dashed var(--line);border-radius:10px}
+.exec{display:flex;align-items:center;gap:9px;margin-top:10px}
+.stbadge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.st-Nãoiniciada{color:var(--st-nao);background:var(--st-nao-bg)} .st-Emandamento{color:var(--st-and);background:var(--st-and-bg)} .st-Concluída{color:var(--st-con);background:var(--st-con-bg)}
+.track{flex:1;height:7px;background:#EDEFF3;border-radius:99px;overflow:hidden} .track>span{display:block;height:100%;background:var(--exec);border-radius:99px}
+.exec .pct{font-size:11px;font-weight:700;color:var(--ink-soft);min-width:34px;text-align:right}
+.dash{display:grid;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px}
+.kpi .big{font-size:34px;font-weight:800;letter-spacing:-.02em} .kpi .lab{color:var(--muted);font-size:12.5px;font-weight:600;margin-top:2px} .kpi .sub2{color:var(--ink-soft);font-size:12px;margin-top:3px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+.panel h3{font-size:13.5px;font-weight:750;margin-bottom:4px} .panel .hint{color:var(--muted);font-size:12px;margin-bottom:12px}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.brow{display:grid;grid-template-columns:130px 1fr 108px;align-items:center;gap:10px;padding:6px 0}
+.brow .bl{font-size:12.5px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+.brow .bl .dotp{width:9px;height:9px;border-radius:50%}
+.brow .bt{height:12px;background:#EDEFF3;border-radius:99px;overflow:hidden} .brow .bt>span{display:block;height:100%;background:var(--exec);border-radius:99px}
+.brow .bv{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums} .brow .bv b{color:var(--ink);font-weight:700}
+.statusbar{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1px solid var(--line)} .statusbar>span{display:block;height:100%}
+.slegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;color:var(--ink-soft);font-size:12.5px} .slegend .k{display:inline-flex;align-items:center;gap:6px} .sq{width:11px;height:11px;border-radius:3px;display:inline-block}
 
-/* execução no card */
-.exec{display:flex; align-items:center; gap:9px; margin-top:10px}
-.stbadge{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; white-space:nowrap}
-.st-Nãoiniciada{color:var(--st-nao); background:var(--st-nao-bg)}
-.st-Emandamento{color:var(--st-and); background:var(--st-and-bg)}
-.st-Concluída{color:var(--st-con); background:var(--st-con-bg)}
-.track{flex:1; height:7px; background:#EDEFF3; border-radius:99px; overflow:hidden}
-.track>span{display:block; height:100%; background:var(--exec); border-radius:99px}
-.exec .pct{font-size:11px; font-weight:700; color:var(--ink-soft); min-width:34px; text-align:right}
-
-/* ---------- gerencial ---------- */
-.dash{display:grid; gap:16px}
-.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px}
-.kpi{background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow); display:flex; align-items:center; gap:16px}
-.kpi .big{font-size:34px; font-weight:800; letter-spacing:-.02em}
-.kpi .lab{color:var(--muted); font-size:12.5px; font-weight:600; margin-top:2px}
-.kpi .sub2{color:var(--ink-soft); font-size:12px; margin-top:3px}
-.ring{flex:0 0 auto}
-.panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow)}
-.panel h3{font-size:13.5px; font-weight:750; letter-spacing:.01em; margin-bottom:4px}
-.panel .hint{color:var(--muted); font-size:12px; margin-bottom:12px}
-.panels{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px}
-.brow{display:grid; grid-template-columns:130px 1fr 108px; align-items:center; gap:10px; padding:6px 0}
-.brow .bl{font-size:12.5px; font-weight:600; color:var(--ink-soft); display:flex; align-items:center; gap:7px}
-.brow .bl .dotp{width:9px;height:9px}
-.brow .bt{height:12px; background:#EDEFF3; border-radius:99px; overflow:hidden}
-.brow .bt>span{display:block; height:100%; background:var(--exec); border-radius:99px}
-.brow .bv{font-size:12px; color:var(--muted); text-align:right; font-variant-numeric:tabular-nums}
-.brow .bv b{color:var(--ink); font-weight:700}
-.statusbar{display:flex; height:26px; border-radius:8px; overflow:hidden; border:1px solid var(--line)}
-.statusbar>span{display:block; height:100%}
-.slegend{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; color:var(--ink-soft); font-size:12.5px}
-.slegend .k{display:inline-flex; align-items:center; gap:6px}
-.sq{width:11px;height:11px;border-radius:3px;display:inline-block}
-
-/* modal */
-.backdrop{position:fixed; inset:0; background:rgba(16,22,31,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:18px}
+/* modal + login */
+.backdrop{position:fixed;inset:0;background:rgba(16,22,31,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
 .backdrop.open{display:flex}
-.modal{background:#fff; border-radius:16px; width:min(640px,100%); max-height:92vh; overflow:auto; box-shadow:0 20px 60px rgba(16,22,31,.35)}
-.modal-head{display:flex; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line)}
-.modal-head h3{font-size:16px; font-weight:750}
-.modal-body{padding:16px 20px; display:grid; gap:13px}
-.row2{display:grid; grid-template-columns:1fr 1fr; gap:13px}
-.row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px}
-label.f{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px}
-.finput,.fselect,.ftext{width:100%; border:1px solid #D6DCE4; border-radius:9px; padding:9px 11px; font-size:14px; color:var(--ink); background:#fff; outline:none}
-.finput:focus,.fselect:focus,.ftext:focus{border-color:#6E86A6; box-shadow:0 0 0 3px rgba(110,134,166,.18)}
-.ftext{min-height:60px; resize:vertical; font-family:inherit}
-.modal-foot{display:flex; gap:10px; align-items:center; padding:14px 20px; border-top:1px solid var(--line)}
-.btn-ghost{background:#fff; border:1px solid var(--line); color:var(--ink-soft); padding:9px 14px; border-radius:9px; cursor:pointer; font-size:14px}
-.btn-del{background:#fff; border:1px solid #F1C7C2; color:#B23A34; padding:9px 14px; border-radius:9px; cursor:pointer; font-size:14px}
-.btn-save{background:#1B2430; border:1px solid #1B2430; color:#fff; padding:9px 18px; border-radius:9px; cursor:pointer; font-size:14px; font-weight:600}
-.savednote{position:fixed; bottom:16px; left:50%; transform:translateX(-50%) translateY(20px); background:#1B2430; color:#fff; padding:9px 16px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:all .25s; z-index:60}
-.savednote.show{opacity:1; transform:translateX(-50%) translateY(0)}
-@media (max-width:640px){ .row2,.row3{grid-template-columns:1fr} .board{padding:16px 14px 50px} .brow{grid-template-columns:110px 1fr 92px} }
-@media (prefers-reduced-motion:reduce){ *{transition:none !important} }
+.modal{background:#fff;border-radius:16px;width:min(640px,100%);max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(16,22,31,.35)}
+.modal.sm{width:min(400px,100%)}
+.modal-head{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)} .modal-head h3{font-size:16px;font-weight:750}
+.modal-body{padding:16px 20px;display:grid;gap:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:13px} .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
+label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.finput,.fselect,.ftext{width:100%;border:1px solid #D6DCE4;border-radius:9px;padding:9px 11px;font-size:14px;color:var(--ink);background:#fff;outline:none}
+.finput:focus,.fselect:focus,.ftext:focus{border-color:#6E86A6;box-shadow:0 0 0 3px rgba(110,134,166,.18)} .ftext{min-height:60px;resize:vertical;font-family:inherit}
+.modal-foot{display:flex;gap:10px;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink-soft);padding:9px 14px;border-radius:9px;cursor:pointer;font-size:14px}
+.btn-del{background:#fff;border:1px solid #F1C7C2;color:#B23A34;padding:9px 14px;border-radius:9px;cursor:pointer;font-size:14px}
+.btn-save{background:#1B2430;border:1px solid #1B2430;color:#fff;padding:9px 18px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:600}
+.err{color:#B23A34;font-size:12.5px;min-height:16px}
+.savednote{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);background:#1B2430;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:all .25s;z-index:60}
+.savednote.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:640px){.row2,.row3{grid-template-columns:1fr} .wrap{padding:16px 14px}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <div class="brandrow">
-    <div class="brand">
-      <h1>Demandas de dados e monitoramento do DJUD</h1>
-      <div class="sub">Judicialização de medicamentos · painel de priorização e acompanhamento</div>
-    </div>
+  <div class="tbrow">
+    <div class="brand" id="brandHome"><div class="logo">DJ</div><div><h1>Painel DJUD</h1><div class="sub">Judicialização de medicamentos</div></div></div>
+    <nav class="nav" aria-label="Seções">
+      <button data-screen="home" aria-current="true">Início</button>
+      <button data-screen="demandas" aria-current="false">Demandas</button>
+      <button data-screen="acomp" aria-current="false">Acompanhamento</button>
+    </nav>
     <div class="spacer"></div>
-    <div class="stats" id="stats"></div>
+    <span class="modebadge mode-demo" id="modeBadge">Modo demonstração</span>
+    <span class="who" id="who"></span>
+    <button class="btn" id="fsBtn" title="Tela cheia">⛶</button>
+    <button class="btn" id="loginBtn">Entrar</button>
+    <button class="btn hidden" id="logoutBtn">Sair</button>
   </div>
+</header>
+
+<!-- HOME -->
+<main class="wrap" id="scr-home">
+  <section class="hero">
+    <div class="eyebrow">Plataforma de gestão do projeto</div>
+    <h2>Priorização e acompanhamento das demandas de dados do DJUD</h2>
+    <p>Um lugar único para enxergar todas as iniciativas do projeto — organizadas por coordenação, prioridade e complexidade — e acompanhar quanto de cada uma já foi executado.</p>
+    <div class="cta">
+      <button class="cta-btn b1" data-screen="demandas"><span class="ic">▤</span><span><span class="t">Demandas</span><span class="d">Ver, priorizar, mover e editar as iniciativas</span></span></button>
+      <button class="cta-btn b2" data-screen="acomp"><span class="ic">◔</span><span><span class="t">Acompanhamento</span><span class="d">Gráficos de execução por prioridade e coordenação</span></span></button>
+    </div>
+  </section>
+  <div class="home-grid">
+    <div class="panel"><h3>Panorama atual</h3><div class="hint">Resumo do que está cadastrado no projeto.</div><div id="homeSummary"></div></div>
+    <div class="about">
+      <h3>Sobre a plataforma</h3>
+      <p>Reúne as demandas levantadas com as coordenações do Departamento e apoia a priorização junto à direção.</p>
+      <ul>
+        <li><b>Prioridade</b> — número (1 = mais alta), indicada pela área.</li>
+        <li><b>Complexidade</b> — palavra (Baixa a Muito alta), leitura técnica de esforço e acesso.</li>
+        <li><b>Execução</b> — status e % de cada iniciativa, que alimentam os gráficos.</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<!-- DEMANDAS -->
+<main class="wrap hidden" id="scr-demandas">
   <div class="controls">
-    <div class="seg" role="group" aria-label="Visão">
+    <div class="seg" role="group" aria-label="Agrupar por">
       <button data-view="coord" aria-pressed="true">Coordenação</button>
       <button data-view="prio" aria-pressed="false">Prioridade</button>
       <button data-view="comp" aria-pressed="false">Complexidade</button>
-      <button data-view="dash" aria-pressed="false">Gerencial</button>
     </div>
-    <div class="field"><input id="q" class="input" type="search" placeholder="Buscar demanda…" style="width:180px"></div>
+    <input id="q" class="input" type="search" placeholder="Buscar demanda…" style="width:180px">
     <select id="fcoord" class="select" aria-label="Filtrar por coordenação"></select>
-    <select id="fprio" class="select" aria-label="Filtrar por prioridade">
-      <option value="">Prioridade: todas</option><option>1</option><option>2</option><option>3</option><option>A definir</option>
-    </select>
-    <select id="fcomp" class="select" aria-label="Filtrar por complexidade">
-      <option value="">Complexidade: todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Muito alta</option>
-    </select>
+    <select id="fprio" class="select"><option value="">Prioridade: todas</option><option>1</option><option>2</option><option>3</option><option>A definir</option></select>
+    <select id="fcomp" class="select"><option value="">Complexidade: todas</option><option>Baixa</option><option>Média</option><option>Alta</option><option>Muito alta</option></select>
     <div class="spacer"></div>
     <button class="btn btn-primary" id="addBtn">＋ Nova demanda</button>
-    <button class="btn" id="fsBtn" title="Tela cheia">⛶ Tela cheia</button>
     <button class="btn" id="expBtn">Exportar</button>
     <button class="btn" id="impBtn">Importar</button>
     <button class="btn" id="resetBtn">Reiniciar</button>
     <input type="file" id="impFile" accept="application/json" hidden>
   </div>
-</header>
-
-<main class="board">
   <div class="legend" id="legend"></div>
   <div id="boardArea"></div>
 </main>
 
+<!-- ACOMPANHAMENTO -->
+<main class="wrap hidden" id="scr-acomp">
+  <div class="controls">
+    <select id="afcoord" class="select" aria-label="Filtrar por coordenação"></select>
+    <select id="afprio" class="select"><option value="">Prioridade: todas</option><option>1</option><option>2</option><option>3</option><option>A definir</option></select>
+    <div class="spacer"></div>
+  </div>
+  <div id="dashArea"></div>
+</main>
+
+<!-- modal editar -->
 <div class="backdrop" id="backdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <div class="modal-head"><h3 id="mTitle">Editar demanda</h3></div>
     <div class="modal-body">
       <div><label class="f" for="mTit">Demanda</label><input id="mTit" class="finput"></div>
       <div><label class="f" for="mOq">O que entrega</label><textarea id="mOq" class="ftext"></textarea></div>
-      <div class="row2">
-        <div><label class="f" for="mFonte">Fonte (origem do dado)</label><input id="mFonte" class="finput"></div>
-        <div><label class="f" for="mAcesso">Acesso</label><input id="mAcesso" class="finput"></div>
-      </div>
+      <div class="row2"><div><label class="f" for="mFonte">Fonte (origem do dado)</label><input id="mFonte" class="finput"></div><div><label class="f" for="mAcesso">Acesso</label><input id="mAcesso" class="finput"></div></div>
       <div class="row3">
         <div><label class="f" for="mCoord">Coordenação</label><select id="mCoord" class="fselect"></select></div>
         <div><label class="f" for="mPrio">Prioridade</label><select id="mPrio" class="fselect"><option>1</option><option>2</option><option>3</option><option>A definir</option></select></div>
@@ -220,293 +252,315 @@ label.f{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); t
         <div><label class="f" for="mStatus">Status de execução</label><select id="mStatus" class="fselect"><option>Não iniciada</option><option>Em andamento</option><option>Concluída</option></select></div>
         <div><label class="f" for="mPct">% executado</label><input id="mPct" class="finput" type="number" min="0" max="100" step="5"></div>
       </div>
-      <div class="row2">
-        <div><label class="f" for="mObs">Observação da prioridade</label><input id="mObs" class="finput" placeholder="ex.: pedido da diretora"></div>
-        <div><label class="f" for="mWarn">Alerta (opcional)</label><input id="mWarn" class="finput" placeholder="ex.: sem acesso"></div>
-      </div>
+      <div class="row2"><div><label class="f" for="mObs">Observação da prioridade</label><input id="mObs" class="finput"></div><div><label class="f" for="mWarn">Alerta (opcional)</label><input id="mWarn" class="finput"></div></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn-del" id="mDelete">Excluir</button>
-      <div class="spacer"></div>
-      <button class="btn-ghost" id="mCancel">Cancelar</button>
-      <button class="btn-save" id="mSave">Salvar</button>
-    </div>
+    <div class="modal-foot"><button class="btn-del" id="mDelete">Excluir</button><div class="spacer"></div><button class="btn-ghost" id="mCancel">Cancelar</button><button class="btn-save" id="mSave">Salvar</button></div>
   </div>
 </div>
-<div class="savednote" id="savednote">Alterações salvas neste navegador</div>
+
+<!-- modal login -->
+<div class="backdrop" id="loginBack">
+  <div class="modal sm" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3>Entrar</h3></div>
+    <div class="modal-body">
+      <div><label class="f" for="lEmail">E-mail</label><input id="lEmail" class="finput" type="email" autocomplete="username"></div>
+      <div><label class="f" for="lPass">Senha</label><input id="lPass" class="finput" type="password" autocomplete="current-password"></div>
+      <div class="err" id="lErr"></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div><button class="btn-ghost" id="lCancel">Cancelar</button><button class="btn-save" id="lSubmit">Entrar</button></div>
+  </div>
+</div>
+<div class="savednote" id="savednote">Salvo</div>
 
 <script>
-const SEED = [{"id": "d01", "coord": "DIRETORA", "titulo": "Alerta de medicamentos emergenciais (pré-entrada)", "oque": "Avisar a compra urgente antes de o processo entrar no DJUD, para ganhar dias de prazo. Depende de acesso ao Sapiens/EPROC (Justiça/AGU) que ainda não temos.", "fonte": "Sapiens / EPROC (Justiça / AGU)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Alta", "obs": "pedido da diretora", "warn": "sem acesso (Sapiens/EPROC)", "status": "Não iniciada", "pct": 0}, {"id": "d02", "coord": "DIRETORA", "titulo": "Tempo do processo: entrada e por coordenação", "oque": "Medir quanto o processo leva na entrada e em cada coordenação (Portaria 7676, 30 dias).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Baixa", "obs": "pedido da diretora", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d03", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recuperação dos dados históricos", "oque": "Reconstruir o histórico para permitir projeção de demanda e responder LAI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d04", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Painel de preços-teto (CMED/PMVG)", "oque": "Preço-teto adaptado do DLOG. Nível 1 por caixa (baixa), nível 2 por unidade (média).", "fonte": "Tabela CMED (Anvisa)", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d05", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Consolidação dos depósitos (FUNDO)", "oque": "Repositório confiável de depósitos; comparar depósito × aquisição.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d06", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Medicamentos mais judicializados (estado/perfil)", "oque": "Ranking por medicamento, estado e perfil; cruzar médico × medicamento.", "fonte": "RedMine (lista interna de processos); Documentos de dentro do processo (SEI)", "acesso": "depende de liberar o acesso; sem acesso hoje", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d07", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recorte por estado (UF) — dimensão reutilizável", "oque": "Deduzir o estado pelo nº CNJ e disponibilizar como dimensão para todos os painéis.", "fonte": "RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d08", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Alertas automáticos de prazo e pendências", "oque": "Alertas de compra parada, ata a vencer e prazo de resposta de 10 dias.", "fonte": "Compras.gov / PNCP; Web service do SEI (tramitação)", "acesso": "fonte pública, disponível; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d09", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Produção por farmacêutico (+ fila furada)", "oque": "Produtividade por farmacêutico e detecção de quem pega os fáceis fora da ordem.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d10", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Dados do paciente organizados (endereço + peso)", "oque": "Repositório por paciente com o nº do processo como chave, compartilhado com a CGLJUD.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d11", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Repositório de preços de mercado (consultas semanais)", "oque": "Repositório onde os farmacêuticos alimentam/consultam o preço de mercado por medicamento, para padronizar o valor usado nos depósitos.", "fonte": "Fontes externas de consulta de preço (sites/farmácias); Planilhas das áreas (SharePoint)", "acesso": "consulta externa — sites a definir com a Fernanda; depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d12", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Automatizar o painel existente (+ detalhamento)", "oque": "Automatizar a consolidação manual do painel da Gilda/Lara e permitir detalhar.", "fonte": "Planilhas das áreas (SharePoint); Web service do SEI (tramitação); RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d13", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Painel de intimações — coberto pelo SISDJUD", "oque": "Só papel/digitalização hoje. Interim: painel a partir da planilha do Andrei; futuro: SISDJUD.", "fonte": "SISDJUD (novo sistema do DJUD); Planilhas das áreas (SharePoint)", "acesso": "sistema em implantação; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d14", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Reabertura antes do desabastecimento", "oque": "Calcular a data provável de desabastecimento e alertar para reabrir o processo.", "fonte": "Planner (Microsoft); Planilhas das áreas (SharePoint)", "acesso": "acesso já disponível; depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d15", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Lista de processos sob demanda", "oque": "Exportação sob demanda: processos ativos/abertos + números.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "3", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d16", "coord": "CGLJUD — Logística Judicial", "titulo": "Painel de estoque (SISMAT)", "oque": "Estoque por medicamento cruzado com pacientes ativos, consumo médio e ata vigente.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d17", "coord": "CGLJUD — Logística Judicial", "titulo": "Correção / limpeza da base do SISMAT", "oque": "Separar aquisição × devolução, remover duplicidades, descrever saídas.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d18", "coord": "CGLJUD — Logística Judicial", "titulo": "Remanejamento entre hospitais", "oque": "Trazer para o painel os medicamentos parados em hospitais.", "fonte": "SISMAT (estoque / DLog); Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d19", "coord": "CGLJUD — Logística Judicial", "titulo": "Compras (DFDs) + prioritárias 414 e fracassos", "oque": "Painel de fase e urgência das compras, com recorte das prioritárias e o motivo dos fracassos.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d20", "coord": "CGLJUD — Logística Judicial", "titulo": "Saldo e vencimento das atas", "oque": "Saldo (comprado × executado) + alerta 6 meses antes do vencimento.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d21", "coord": "CGLJUD — Logística Judicial", "titulo": "Trocas a vencer e incineração", "oque": "Monitorar as cartas de troca e as incinerações.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d22", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Valor de ressarcimento a receber dos estados", "oque": "Quanto cada estado deve ressarcir à União — hoje atualizado à mão.", "fonte": "FNS / SMART; SISMAT (estoque / DLog); Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d23", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Regras de cálculo do ressarcimento (Tema 234)", "oque": "Alíquota por tipo (oncológico ~20%), incorporado ou não, depósito × entrega.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d24", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Relatório quinzenal automático", "oque": "Gerar o quadro que a ASE pede a cada 15 dias a partir do painel.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d25", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Saldo dos repasses a parceiros (TEDs)", "oque": "Saldo e situação dos 6 TEDs, hoje acompanhados à mão no SEI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d26", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Orçamento gasto no ano (SIAFI)", "oque": "Quanto do orçamento já foi gasto no ano, no formato que a diretora usa.", "fonte": "SIAFI (orçamento)", "acesso": "depende de acesso — certificado do Ministério", "prio": "1", "comp": "Baixa", "obs": "ganho rápido", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d27", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Planilha de depósitos preenchida automaticamente", "oque": "Campos já preenchidos pelas coordenações anteriores; a CGPO só põe a data.", "fonte": "Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d28", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Projeção do orçamento até o fim do ano", "oque": "Projetar o gasto até dezembro (itens > R$ 1 mi); alimenta o PLOA.", "fonte": "SIAFI (orçamento); Compras.gov / PNCP", "acesso": "depende de acesso — certificado do Ministério; fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d29", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Checagem de óbito antes do depósito", "oque": "Conferir por CPF se o paciente faleceu antes de liberar o depósito.", "fonte": "Receita Federal; SIM / DataSUS (óbitos); SIRC (registro civil)", "acesso": "acesso já disponível; depende de liberar o acesso; a explorar", "prio": "3", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d30", "coord": "GABINETE da diretora (assessoria)", "titulo": "Criticidade das demandas externas (alerta)", "oque": "Classificar e alertar as demandas externas (PF, MP, parlamentares).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d31", "coord": "GABINETE da diretora (assessoria)", "titulo": "Acompanhamento das demandas da assessoria", "oque": "Painel das 3 assessoras: quem está com cada demanda, prazo e situação.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d32", "coord": "GABINETE da diretora (assessoria)", "titulo": "Análise das condenações por danos morais", "oque": "Condenações cruzadas com o tempo no DJUD e o tipo de medicamento.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d33", "coord": "GABINETE da diretora (assessoria)", "titulo": "Painel público de dados (LAI)", "oque": "Painel público com as informações mais pedidas na LAI.", "fonte": "Documentos de dentro do processo (SEI); RedMine (lista interna de processos)", "acesso": "sem acesso hoje; depende de liberar o acesso", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d34", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de Notas Técnicas (SDJud)", "oque": "Banco de notas técnicas do SDJud — atenção: ≠ SISDJUD. Demanda do TCU/Conjur.", "fonte": "SDJud (banco de notas técnicas)", "acesso": "a definir", "prio": "A definir", "comp": "Média", "obs": "", "warn": "≠ SISDJUD · em paralelo", "status": "Não iniciada", "pct": 0}, {"id": "d35", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de respostas / LAI (repositório pesquisável)", "oque": "Modelo de planilha/repositório pesquisável p/ as assessoras: saber se um tema já foi respondido e reusar a resposta.", "fonte": "Planilhas das áreas (SharePoint); SISDJUD (novo sistema do DJUD)", "acesso": "depende de liberar o acesso; sistema em implantação", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}];
-const COORDS = [{"full": "DIRETORA", "short": "Diretora", "dot": "#6B7280"}, {"full": "TRANSVERSAIS (afetam várias áreas)", "short": "Transversais", "dot": "#7C6BAF"}, {"full": "CGMED — Coordenação Médica e Farmacêutica", "short": "CGMED", "dot": "#2E8B8B"}, {"full": "CGAJUD — Análise e Monitoramento", "short": "CGAJUD", "dot": "#C77D3C"}, {"full": "CGLJUD — Logística Judicial", "short": "CGLJUD", "dot": "#3E7CB1"}, {"full": "CGPJUD — Ressarcimento pelos estados", "short": "CGPJUD", "dot": "#B0577A"}, {"full": "CGPO — Planejamento e Orçamento", "short": "CGPO", "dot": "#4E9A6B"}, {"full": "GABINETE da diretora (assessoria)", "short": "Gabinete", "dot": "#9A7B4F"}];
-const PRIOS = ['1','2','3','A definir'];
-const COMPS = ['Baixa','Média','Alta','Muito alta'];
-const STATUS = ['Não iniciada','Em andamento','Concluída'];
-const KEY = 'djud_demandas_v3';
+/* ================== CONFIGURAÇÃO ==================
+   Deixe API_BASE vazio ("") para o MODO DEMONSTRAÇÃO (salva no navegador).
+   Preencha com a URL da API da UFSC (ex.: "https://painel.saude.ufsc.br/api")
+   para ativar LOGIN e DADOS COMPARTILHADOS.                                   */
+const CONFIG = { API_BASE: "" };
+/* ================================================= */
 
-const shortOf = f => (COORDS.find(c=>c.full===f)||{}).short || f;
-const dotOf   = f => (COORDS.find(c=>c.full===f)||{}).dot || '#94A3B8';
-const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const cls = s => String(s).replace(/\s/g,'');
+const SEED=[{"id": "d01", "coord": "DIRETORA", "titulo": "Alerta de medicamentos emergenciais (pré-entrada)", "oque": "Avisar a compra urgente antes de o processo entrar no DJUD, para ganhar dias de prazo. Depende de acesso ao Sapiens/EPROC (Justiça/AGU) que ainda não temos.", "fonte": "Sapiens / EPROC (Justiça / AGU)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Alta", "obs": "pedido da diretora", "warn": "sem acesso (Sapiens/EPROC)", "status": "Não iniciada", "pct": 0}, {"id": "d02", "coord": "DIRETORA", "titulo": "Tempo do processo: entrada e por coordenação", "oque": "Medir quanto o processo leva na entrada e em cada coordenação (Portaria 7676, 30 dias).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Baixa", "obs": "pedido da diretora", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d03", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recuperação dos dados históricos", "oque": "Reconstruir o histórico para permitir projeção de demanda e responder LAI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "1", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d04", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Painel de preços-teto (CMED/PMVG)", "oque": "Preço-teto adaptado do DLOG. Nível 1 por caixa (baixa), nível 2 por unidade (média).", "fonte": "Tabela CMED (Anvisa)", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d05", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Consolidação dos depósitos (FUNDO)", "oque": "Repositório confiável de depósitos; comparar depósito × aquisição.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d06", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Medicamentos mais judicializados (estado/perfil)", "oque": "Ranking por medicamento, estado e perfil; cruzar médico × medicamento.", "fonte": "RedMine (lista interna de processos); Documentos de dentro do processo (SEI)", "acesso": "depende de liberar o acesso; sem acesso hoje", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d07", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Recorte por estado (UF) — dimensão reutilizável", "oque": "Deduzir o estado pelo nº CNJ e disponibilizar como dimensão para todos os painéis.", "fonte": "RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d08", "coord": "TRANSVERSAIS (afetam várias áreas)", "titulo": "Alertas automáticos de prazo e pendências", "oque": "Alertas de compra parada, ata a vencer e prazo de resposta de 10 dias.", "fonte": "Compras.gov / PNCP; Web service do SEI (tramitação)", "acesso": "fonte pública, disponível; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d09", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Produção por farmacêutico (+ fila furada)", "oque": "Produtividade por farmacêutico e detecção de quem pega os fáceis fora da ordem.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d10", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Dados do paciente organizados (endereço + peso)", "oque": "Repositório por paciente com o nº do processo como chave, compartilhado com a CGLJUD.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d11", "coord": "CGMED — Coordenação Médica e Farmacêutica", "titulo": "Repositório de preços de mercado (consultas semanais)", "oque": "Repositório onde os farmacêuticos alimentam/consultam o preço de mercado por medicamento, para padronizar o valor usado nos depósitos.", "fonte": "Fontes externas de consulta de preço (sites/farmácias); Planilhas das áreas (SharePoint)", "acesso": "consulta externa — sites a definir com a Fernanda; depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d12", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Automatizar o painel existente (+ detalhamento)", "oque": "Automatizar a consolidação manual do painel da Gilda/Lara e permitir detalhar.", "fonte": "Planilhas das áreas (SharePoint); Web service do SEI (tramitação); RedMine (lista interna de processos)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d13", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Painel de intimações — coberto pelo SISDJUD", "oque": "Só papel/digitalização hoje. Interim: painel a partir da planilha do Andrei; futuro: SISDJUD.", "fonte": "SISDJUD (novo sistema do DJUD); Planilhas das áreas (SharePoint)", "acesso": "sistema em implantação; depende de liberar o acesso", "prio": "2", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d14", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Reabertura antes do desabastecimento", "oque": "Calcular a data provável de desabastecimento e alertar para reabrir o processo.", "fonte": "Planner (Microsoft); Planilhas das áreas (SharePoint)", "acesso": "acesso já disponível; depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d15", "coord": "CGAJUD — Análise e Monitoramento", "titulo": "Lista de processos sob demanda", "oque": "Exportação sob demanda: processos ativos/abertos + números.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "3", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d16", "coord": "CGLJUD — Logística Judicial", "titulo": "Painel de estoque (SISMAT)", "oque": "Estoque por medicamento cruzado com pacientes ativos, consumo médio e ata vigente.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d17", "coord": "CGLJUD — Logística Judicial", "titulo": "Correção / limpeza da base do SISMAT", "oque": "Separar aquisição × devolução, remover duplicidades, descrever saídas.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d18", "coord": "CGLJUD — Logística Judicial", "titulo": "Remanejamento entre hospitais", "oque": "Trazer para o painel os medicamentos parados em hospitais.", "fonte": "SISMAT (estoque / DLog); Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d19", "coord": "CGLJUD — Logística Judicial", "titulo": "Compras (DFDs) + prioritárias 414 e fracassos", "oque": "Painel de fase e urgência das compras, com recorte das prioritárias e o motivo dos fracassos.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d20", "coord": "CGLJUD — Logística Judicial", "titulo": "Saldo e vencimento das atas", "oque": "Saldo (comprado × executado) + alerta 6 meses antes do vencimento.", "fonte": "Compras.gov / PNCP", "acesso": "fonte pública, disponível", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d21", "coord": "CGLJUD — Logística Judicial", "titulo": "Trocas a vencer e incineração", "oque": "Monitorar as cartas de troca e as incinerações.", "fonte": "SISMAT (estoque / DLog)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d22", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Valor de ressarcimento a receber dos estados", "oque": "Quanto cada estado deve ressarcir à União — hoje atualizado à mão.", "fonte": "FNS / SMART; SISMAT (estoque / DLog); Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d23", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Regras de cálculo do ressarcimento (Tema 234)", "oque": "Alíquota por tipo (oncológico ~20%), incorporado ou não, depósito × entrega.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d24", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Relatório quinzenal automático", "oque": "Gerar o quadro que a ASE pede a cada 15 dias a partir do painel.", "fonte": "Sistema do fundo", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d25", "coord": "CGPJUD — Ressarcimento pelos estados", "titulo": "Saldo dos repasses a parceiros (TEDs)", "oque": "Saldo e situação dos 6 TEDs, hoje acompanhados à mão no SEI.", "fonte": "Documentos de dentro do processo (SEI)", "acesso": "sem acesso hoje", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d26", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Orçamento gasto no ano (SIAFI)", "oque": "Quanto do orçamento já foi gasto no ano, no formato que a diretora usa.", "fonte": "SIAFI (orçamento)", "acesso": "depende de acesso — certificado do Ministério", "prio": "1", "comp": "Baixa", "obs": "ganho rápido", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d27", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Planilha de depósitos preenchida automaticamente", "oque": "Campos já preenchidos pelas coordenações anteriores; a CGPO só põe a data.", "fonte": "Planilhas das áreas (SharePoint)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d28", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Projeção do orçamento até o fim do ano", "oque": "Projetar o gasto até dezembro (itens > R$ 1 mi); alimenta o PLOA.", "fonte": "SIAFI (orçamento); Compras.gov / PNCP", "acesso": "depende de acesso — certificado do Ministério; fonte pública, disponível", "prio": "2", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d29", "coord": "CGPO — Planejamento e Orçamento", "titulo": "Checagem de óbito antes do depósito", "oque": "Conferir por CPF se o paciente faleceu antes de liberar o depósito.", "fonte": "Receita Federal; SIM / DataSUS (óbitos); SIRC (registro civil)", "acesso": "acesso já disponível; depende de liberar o acesso; a explorar", "prio": "3", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d30", "coord": "GABINETE da diretora (assessoria)", "titulo": "Criticidade das demandas externas (alerta)", "oque": "Classificar e alertar as demandas externas (PF, MP, parlamentares).", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d31", "coord": "GABINETE da diretora (assessoria)", "titulo": "Acompanhamento das demandas da assessoria", "oque": "Painel das 3 assessoras: quem está com cada demanda, prazo e situação.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Baixa", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d32", "coord": "GABINETE da diretora (assessoria)", "titulo": "Análise das condenações por danos morais", "oque": "Condenações cruzadas com o tempo no DJUD e o tipo de medicamento.", "fonte": "Web service do SEI (tramitação)", "acesso": "depende de liberar o acesso", "prio": "2", "comp": "Alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d33", "coord": "GABINETE da diretora (assessoria)", "titulo": "Painel público de dados (LAI)", "oque": "Painel público com as informações mais pedidas na LAI.", "fonte": "Documentos de dentro do processo (SEI); RedMine (lista interna de processos)", "acesso": "sem acesso hoje; depende de liberar o acesso", "prio": "3", "comp": "Muito alta", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}, {"id": "d34", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de Notas Técnicas (SDJud)", "oque": "Banco de notas técnicas do SDJud — atenção: ≠ SISDJUD. Demanda do TCU/Conjur.", "fonte": "SDJud (banco de notas técnicas)", "acesso": "a definir", "prio": "A definir", "comp": "Média", "obs": "", "warn": "≠ SISDJUD · em paralelo", "status": "Não iniciada", "pct": 0}, {"id": "d35", "coord": "GABINETE da diretora (assessoria)", "titulo": "Banco de respostas / LAI (repositório pesquisável)", "oque": "Modelo de planilha/repositório pesquisável p/ as assessoras: saber se um tema já foi respondido e reusar a resposta.", "fonte": "Planilhas das áreas (SharePoint); SISDJUD (novo sistema do DJUD)", "acesso": "depende de liberar o acesso; sistema em implantação", "prio": "1", "comp": "Média", "obs": "", "warn": "", "status": "Não iniciada", "pct": 0}], COORDS=[{"full": "DIRETORA", "short": "Diretora", "dot": "#6B7280"}, {"full": "TRANSVERSAIS (afetam várias áreas)", "short": "Transversais", "dot": "#7C6BAF"}, {"full": "CGMED — Coordenação Médica e Farmacêutica", "short": "CGMED", "dot": "#2E8B8B"}, {"full": "CGAJUD — Análise e Monitoramento", "short": "CGAJUD", "dot": "#C77D3C"}, {"full": "CGLJUD — Logística Judicial", "short": "CGLJUD", "dot": "#3E7CB1"}, {"full": "CGPJUD — Ressarcimento pelos estados", "short": "CGPJUD", "dot": "#B0577A"}, {"full": "CGPO — Planejamento e Orçamento", "short": "CGPO", "dot": "#4E9A6B"}, {"full": "GABINETE da diretora (assessoria)", "short": "Gabinete", "dot": "#9A7B4F"}];
+const PRIOS=['1','2','3','A definir'], COMPS=['Baixa','Média','Alta','Muito alta'], STATUS=['Não iniciada','Em andamento','Concluída'];
+const KEY='djud_demandas_v3', TOKKEY='djud_token';
+const LIVE = !!CONFIG.API_BASE;
+const shortOf=f=>(COORDS.find(c=>c.full===f)||{}).short||f;
+const dotOf=f=>(COORDS.find(c=>c.full===f)||{}).dot||'#94A3B8';
+const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const cls=s=>String(s).replace(/\s/g,'');
+const avg=a=>a.length?Math.round(a.reduce((s,x)=>s+(x||0),0)/a.length):0;
+function normalize(c,i){return Object.assign({id:'d'+i,coord:COORDS[0].full,titulo:'',oque:'',fonte:'',acesso:'',prio:'A definir',comp:'Média',obs:'',warn:'',status:'Não iniciada',pct:0},c,{status:STATUS.includes(c.status)?c.status:'Não iniciada',pct:(typeof c.pct==='number'?c.pct:0)});}
 
-let DATA = load();
-let view = 'coord';
-let dragId = null;
+let DATA=[], screen='home', view='coord', dragId=null, editing=null;
+let auth={token:null, role:'editor', email:null};
+const CAN_EDIT=()=>!LIVE || auth.role==='editor';
 
-function normalize(c,i){
-  return Object.assign({id:'d'+i,coord:COORDS[0].full,titulo:'',oque:'',fonte:'',acesso:'',
-    prio:'A definir',comp:'Média',obs:'',warn:'',status:'Não iniciada',pct:0}, c,
-    {status: STATUS.includes(c.status)?c.status:'Não iniciada',
-     pct: (typeof c.pct==='number'?c.pct:(c.status==='Concluída'?100:0))});
+/* ---------- STORE: demo (localStorage) ou api (fetch) ---------- */
+const localStore={
+  async list(){ try{const r=localStorage.getItem(KEY); if(r) return JSON.parse(r).map(normalize);}catch(e){} return SEED.map(normalize); },
+  async persist(){ try{localStorage.setItem(KEY,JSON.stringify(DATA));}catch(e){} },
+  async create(c){ c.id='d'+Date.now().toString(36); DATA.push(c); await this.persist(); return c; },
+  async update(c){ await this.persist(); return c; },
+  async remove(id){ DATA=DATA.filter(x=>x.id!==id); await this.persist(); },
+  async resetSeed(){ DATA=SEED.map(normalize); await this.persist(); },
+};
+async function api(path,opts={}){
+  const h=Object.assign({'Content-Type':'application/json'},opts.headers||{});
+  if(auth.token) h['Authorization']='Bearer '+auth.token;
+  const r=await fetch(CONFIG.API_BASE+path,Object.assign({},opts,{headers:h}));
+  if(r.status===401){ doLogout(); throw new Error('Sessão expirada. Entre novamente.'); }
+  if(!r.ok){ let m='Erro '+r.status; try{const j=await r.json(); m=j.detail||m;}catch(e){} throw new Error(m); }
+  return r.status===204?null:r.json();
 }
-function load(){
-  try{ const raw=localStorage.getItem(KEY); if(raw){ return JSON.parse(raw).map(normalize); } }catch(e){}
-  return SEED.map(normalize);
-}
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DATA)); toast(); }catch(e){} }
-let toastT; function toast(){ const n=document.getElementById('savednote'); n.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>n.classList.remove('show'),1400); }
+const apiStore={
+  async list(){ return (await api('/demandas')).map(normalize); },
+  async create(c){ return normalize(await api('/demandas',{method:'POST',body:JSON.stringify(c)})); },
+  async update(c){ return normalize(await api('/demandas/'+c.id,{method:'PUT',body:JSON.stringify(c)})); },
+  async remove(id){ await api('/demandas/'+id,{method:'DELETE'}); DATA=DATA.filter(x=>x.id!==id); },
+  async resetSeed(){ throw new Error('Reiniciar não está disponível no modo conectado.'); },
+};
+const store = LIVE ? apiStore : localStore;
 
-const F={q:'',coord:'',prio:'',comp:''};
-function filtered(){
-  return DATA.filter(c=>{
-    if(F.coord && c.coord!==F.coord) return false;
-    if(F.prio && c.prio!==F.prio) return false;
-    if(F.comp && c.comp!==F.comp) return false;
-    if(F.q){ const t=(c.titulo+' '+c.oque+' '+c.fonte).toLowerCase(); if(!t.includes(F.q.toLowerCase())) return false; }
-    return true;
-  });
-}
-const prioClass = p => p==='1'?'p1':p==='2'?'p2':p==='3'?'p3':'pdef';
-const prioRank = p => ({'1':0,'2':1,'3':2,'A definir':3}[p] ?? 4);
-const coordRank = f => { const i=COORDS.findIndex(c=>c.full===f); return i<0?99:i; };
-function sortCards(list, by){
-  return list.slice().sort((a,b)=>{
-    if(by==='prio') return coordRank(a.coord)-coordRank(b.coord) || a.titulo.localeCompare(b.titulo,'pt');
-    return prioRank(a.prio)-prioRank(b.prio) || a.titulo.localeCompare(b.titulo,'pt');
-  });
-}
+let toastT; function toast(msg){const n=document.getElementById('savednote'); n.textContent=msg||'Salvo'; n.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>n.classList.remove('show'),1400);}
 
+/* ---------- filtros ---------- */
+const F={q:'',coord:'',prio:'',comp:''}, FA={coord:'',prio:''};
+function filtered(){return DATA.filter(c=>{ if(F.coord&&c.coord!==F.coord)return false; if(F.prio&&c.prio!==F.prio)return false; if(F.comp&&c.comp!==F.comp)return false; if(F.q){const t=(c.titulo+' '+c.oque+' '+c.fonte).toLowerCase(); if(!t.includes(F.q.toLowerCase()))return false;} return true;});}
+function filteredA(){return DATA.filter(c=>{ if(FA.coord&&c.coord!==FA.coord)return false; if(FA.prio&&c.prio!==FA.prio)return false; return true;});}
+
+const prioClass=p=>p==='1'?'p1':p==='2'?'p2':p==='3'?'p3':'pdef';
+const prioRank=p=>({'1':0,'2':1,'3':2,'A definir':3}[p]??4);
+const coordRank=f=>{const i=COORDS.findIndex(c=>c.full===f);return i<0?99:i;};
+function sortCards(l,by){return l.slice().sort((a,b)=> by==='prio'? (coordRank(a.coord)-coordRank(b.coord)||a.titulo.localeCompare(b.titulo,'pt')) : (prioRank(a.prio)-prioRank(b.prio)||a.titulo.localeCompare(b.titulo,'pt')));}
+
+/* ---------- card ---------- */
 function cardEl(c){
-  const el=document.createElement('article');
-  el.className='card'; el.draggable=true; el.dataset.id=c.id; el.tabIndex=0;
+  const el=document.createElement('article'); el.className='card'; el.dataset.id=c.id; el.tabIndex=0;
+  const canEdit=CAN_EDIT(); el.draggable=canEdit;
   el.innerHTML=`
     <div class="card-top">
       <span class="coordchip"><span class="cdot" style="background:${dotOf(c.coord)}"></span>${esc(shortOf(c.coord))}</span>
-      <div class="card-actions">
-        <button class="iconbtn" title="Editar" aria-label="Editar" data-act="edit">✎</button>
-        <button class="iconbtn del" title="Excluir" aria-label="Excluir" data-act="del">🗑</button>
-      </div>
+      ${canEdit?`<div class="card-actions"><button class="iconbtn" title="Editar" data-act="edit">✎</button><button class="iconbtn del" title="Excluir" data-act="del">🗑</button></div>`:''}
     </div>
     <div class="card-title">${esc(c.titulo)}</div>
     ${c.oque?`<div class="card-desc">${esc(c.oque)}</div>`:''}
     ${c.fonte?`<div class="card-src"><b>Fonte:</b> ${esc(c.fonte)}${c.acesso?` — ${esc(c.acesso)}`:''}</div>`:''}
     ${c.warn?`<span class="card-warn">${esc(c.warn)}</span>`:''}
     <div class="badges">
-      <div class="prio ${prioClass(c.prio)}">
-        <span class="seal">${esc(c.prio==='A definir'?'—':c.prio)}</span>
-        <span class="lbl">Prioridade<span class="v">${c.prio==='A definir'?'a definir':(c.prio==='1'?'mais alta':c.prio==='2'?'intermediária':'mais baixa')}</span></span>
-      </div>
+      <div class="prio ${prioClass(c.prio)}"><span class="seal">${esc(c.prio==='A definir'?'—':c.prio)}</span><span class="lbl">Prioridade<span class="v">${c.prio==='A definir'?'a definir':(c.prio==='1'?'mais alta':c.prio==='2'?'intermediária':'mais baixa')}</span></span></div>
       <div class="pill cx-${cls(c.comp)}"><span class="cap">Complexidade</span><span class="chip">${esc(c.comp)}</span></div>
     </div>
-    <div class="exec">
-      <span class="stbadge st-${cls(c.status)}">${esc(c.status)}</span>
-      <span class="track"><span style="width:${c.pct||0}%"></span></span>
-      <span class="pct tabular">${c.pct||0}%</span>
-    </div>`;
-  el.addEventListener('dragstart',e=>{dragId=c.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move';});
-  el.addEventListener('dragend',()=>{dragId=null; el.classList.remove('dragging'); document.querySelectorAll('.drop-on').forEach(x=>x.classList.remove('drop-on'));});
-  el.querySelector('[data-act=edit]').addEventListener('click',ev=>{ev.stopPropagation(); openEdit(c.id);});
-  el.querySelector('[data-act=del]').addEventListener('click',ev=>{ev.stopPropagation(); removeCard(c.id);});
-  el.addEventListener('dblclick',()=>openEdit(c.id));
+    <div class="exec"><span class="stbadge st-${cls(c.status)}">${esc(c.status)}</span><span class="track"><span style="width:${c.pct||0}%"></span></span><span class="pct tabular">${c.pct||0}%</span></div>`;
+  if(canEdit){
+    el.addEventListener('dragstart',e=>{dragId=c.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move';});
+    el.addEventListener('dragend',()=>{dragId=null; el.classList.remove('dragging'); document.querySelectorAll('.drop-on').forEach(x=>x.classList.remove('drop-on'));});
+    el.querySelector('[data-act=edit]').addEventListener('click',ev=>{ev.stopPropagation(); openEdit(c.id);});
+    el.querySelector('[data-act=del]').addEventListener('click',ev=>{ev.stopPropagation(); removeCard(c.id);});
+    el.addEventListener('dblclick',()=>openEdit(c.id));
+  }
   return el;
 }
-
 function wireDrop(zone,dim,val){
+  if(!CAN_EDIT()) return;
   zone.addEventListener('dragover',e=>{e.preventDefault(); zone.classList.add('drop-on');});
-  zone.addEventListener('dragleave',e=>{ if(!zone.contains(e.relatedTarget)) zone.classList.remove('drop-on'); });
-  zone.addEventListener('drop',e=>{
-    e.preventDefault(); zone.classList.remove('drop-on'); if(!dragId) return;
-    const c=DATA.find(x=>x.id===dragId); if(!c) return;
-    if(dim==='coord') c.coord=val; else if(dim==='prio') c.prio=val; else c.comp=val;
-    save(); render();
+  zone.addEventListener('dragleave',e=>{if(!zone.contains(e.relatedTarget)) zone.classList.remove('drop-on');});
+  zone.addEventListener('drop',async e=>{ e.preventDefault(); zone.classList.remove('drop-on'); if(!dragId)return;
+    const c=DATA.find(x=>x.id===dragId); if(!c)return;
+    if(dim==='coord')c.coord=val; else if(dim==='prio')c.prio=val; else c.comp=val;
+    try{ await store.update(c); toast('Salvo'); }catch(err){ alert(err.message); } renderBoard();
   });
 }
 
-/* ---------- gerencial ---------- */
-const avg = arr => arr.length? Math.round(arr.reduce((s,x)=>s+(x||0),0)/arr.length):0;
-function ringSVG(pct){
-  const r=46, c=2*Math.PI*r, off=c*(1-pct/100);
-  return `<svg class="ring" width="112" height="112" viewBox="0 0 112 112">
-    <circle cx="56" cy="56" r="${r}" fill="none" stroke="#EDEFF3" stroke-width="12"/>
-    <circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--exec)" stroke-width="12" stroke-linecap="round"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 56 56)"/>
-    <text x="56" y="52" text-anchor="middle" font-size="24" font-weight="800" fill="#1B2430">${pct}%</text>
-    <text x="56" y="70" text-anchor="middle" font-size="10" fill="#78879A">executado</text></svg>`;
-}
-function barRows(groups){
-  return groups.map(g=>`<div class="brow">
-    <div class="bl">${g.dot?`<span class="dotp" style="background:${g.dot}"></span>`:''}${esc(g.label)}</div>
-    <div class="bt"><span style="width:${g.pct}%"></span></div>
-    <div class="bv"><b>${g.pct}%</b> · ${g.n} ${g.n===1?'dem.':'dem.'}</div>
-  </div>`).join('');
-}
-function renderDash(){
-  const items=filtered();
-  const n=items.length;
-  const overall=avg(items.map(c=>c.pct));
-  const cnt=s=>items.filter(c=>c.status===s).length;
-  const nao=cnt('Não iniciada'), and=cnt('Em andamento'), con=cnt('Concluída');
-  const pctOf=k=> n? Math.round(k/n*100):0;
-
-  const byPrio=PRIOS.map(p=>{const g=items.filter(c=>c.prio===p); return {label:'Prioridade '+p,n:g.length,pct:avg(g.map(c=>c.pct))};});
-  const byComp=COMPS.map(v=>{const g=items.filter(c=>c.comp===v); return {label:v,n:g.length,pct:avg(g.map(c=>c.pct))};});
-  const byCoord=COORDS.map(co=>{const g=items.filter(c=>c.coord===co.full); return {label:co.short,dot:co.dot,n:g.length,pct:avg(g.map(c=>c.pct))};});
-
-  const area=document.getElementById('boardArea');
-  area.innerHTML=`
-   <div class="dash">
-    <div class="kpis">
-      <div class="kpi"><div>${ringSVG(overall)}</div><div><div class="lab">Execução geral</div><div class="sub2">média de conclusão das ${n} iniciativas${(F.coord||F.prio||F.comp||F.q)?' (filtro ativo)':''}</div></div></div>
-      <div class="kpi"><div><div class="big tabular">${n}</div><div class="lab">Iniciativas</div><div class="sub2">no recorte atual</div></div></div>
-      <div class="kpi"><div><div class="big tabular" style="color:var(--st-con)">${con}</div><div class="lab">Concluídas</div><div class="sub2">${pctOf(con)}% do total</div></div></div>
-      <div class="kpi"><div><div class="big tabular" style="color:var(--st-and)">${and}</div><div class="lab">Em andamento</div><div class="sub2">${nao} não iniciadas</div></div></div>
-    </div>
-
-    <div class="panel">
-      <h3>Situação das iniciativas</h3>
-      <div class="hint">Distribuição por status de execução.</div>
-      <div class="statusbar">
-        <span style="width:${pctOf(nao)}%; background:var(--st-nao)"></span>
-        <span style="width:${pctOf(and)}%; background:var(--st-and)"></span>
-        <span style="width:${pctOf(con)}%; background:var(--st-con)"></span>
-      </div>
-      <div class="slegend">
-        <span class="k"><span class="sq" style="background:var(--st-nao)"></span> Não iniciada — <b>&nbsp;${nao}</b></span>
-        <span class="k"><span class="sq" style="background:var(--st-and)"></span> Em andamento — <b>&nbsp;${and}</b></span>
-        <span class="k"><span class="sq" style="background:var(--st-con)"></span> Concluída — <b>&nbsp;${con}</b></span>
-      </div>
-    </div>
-
-    <div class="panels">
-      <div class="panel"><h3>Execução por prioridade</h3><div class="hint">% médio executado em cada nível.</div>${barRows(byPrio)}</div>
-      <div class="panel"><h3>Execução por complexidade</h3><div class="hint">% médio executado em cada grau.</div>${barRows(byComp)}</div>
-    </div>
-    <div class="panel"><h3>Execução por coordenação</h3><div class="hint">% médio executado em cada área.</div>${barRows(byCoord)}</div>
-   </div>`;
-}
-
-function render(){
-  document.getElementById('legend').innerHTML = view==='dash'
-   ? `<span class="k">Visão gerencial — números refletem os filtros ativos. Ajuste o status/% de cada demanda no lápis (Editar).</span>`
-   : `<span class="k"><span class="seal p1" style="width:22px;height:22px;font-size:12px;border-width:2px">1</span> Prioridade (número, 1 = mais alta)</span>
-      <span class="k"><span class="chip cx-Alta" style="border:1px solid var(--cx-al-bd)">Complexidade</span> (palavra)</span>
-      <span class="k"><span class="stbadge st-Emandamento">Em andamento</span> status de execução + barra de %</span>
-      <span class="k" style="color:#9AA6B4">Arraste para reclassificar · clique no lápis para editar</span>`;
-
-  if(view==='dash'){ renderDash(); renderStats(); return; }
-  const area=document.getElementById('boardArea'); area.innerHTML='';
-  const items=filtered();
+/* ---------- render board ---------- */
+function renderBoard(){
+  document.getElementById('legend').innerHTML=`
+    <span class="k"><span class="seal p1" style="width:22px;height:22px;font-size:12px;border-width:2px">1</span> Prioridade (1 = mais alta)</span>
+    <span class="k"><span class="chip cx-Alta" style="border:1px solid var(--cx-al-bd)">Complexidade</span> (palavra)</span>
+    <span class="k"><span class="stbadge st-Emandamento">Em andamento</span> execução + %</span>
+    ${CAN_EDIT()?'<span class="k" style="color:#9AA6B4">Arraste para reclassificar · lápis para editar</span>':'<span class="k" style="color:#9AA6B4">Somente leitura</span>'}`;
+  const area=document.getElementById('boardArea'); area.innerHTML=''; const items=filtered();
   if(view==='coord'){
     COORDS.forEach(co=>{
       const cs=sortCards(items.filter(c=>c.coord===co.full),'coord');
       const sec=document.createElement('section'); sec.className='section';
       sec.innerHTML=`<div class="section-head"><span class="cdot" style="background:${co.dot}"></span><h2>${esc(co.full)}</h2><span class="count">${cs.length}</span></div><div class="grid"></div>`;
       const grid=sec.querySelector('.grid');
-      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c))); else grid.innerHTML='<div class="empty">Sem demandas nesta coordenação</div>';
+      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c))); else grid.innerHTML='<div class="empty">Sem demandas</div>';
       wireDrop(sec,'coord',co.full); area.appendChild(sec);
     });
   } else {
-    const vals=view==='prio'?PRIOS:COMPS;
-    const wrap=document.createElement('div'); wrap.className='cols';
+    const vals=view==='prio'?PRIOS:COMPS, wrap=document.createElement('div'); wrap.className='cols';
     vals.forEach(v=>{
-      const cs=sortCards(items.filter(c=>(view==='prio'?c.prio:c.comp)===v), view);
+      const cs=sortCards(items.filter(c=>(view==='prio'?c.prio:c.comp)===v),view);
       const col=document.createElement('div'); col.className='col';
-      const label=view==='prio'?('Prioridade '+v):v;
-      col.innerHTML=`<div class="col-head"><span class="lbl">${esc(label)}</span><span class="count">${cs.length}</span></div><div class="grid"></div>`;
+      col.innerHTML=`<div class="col-head"><span class="lbl">${esc(view==='prio'?'Prioridade '+v:v)}</span><span class="count">${cs.length}</span></div><div class="grid"></div>`;
       const grid=col.querySelector('.grid');
-      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c))); else grid.innerHTML='<div class="empty">Arraste demandas para cá</div>';
+      if(cs.length) cs.forEach(c=>grid.appendChild(cardEl(c))); else grid.innerHTML='<div class="empty">Arraste para cá</div>';
       wireDrop(col,view,v); wrap.appendChild(col);
     });
     area.appendChild(wrap);
   }
-  renderStats();
 }
 
-function renderStats(){
-  const n=DATA.length, exec=avg(DATA.map(c=>c.pct)), con=DATA.filter(c=>c.status==='Concluída').length;
-  document.getElementById('stats').innerHTML=`
-    <span class="stat"><b>${n}</b> demandas</span>
-    <span class="stat"><b>${exec}%</b> executado</span>
-    <span class="stat"><span class="dotp" style="background:var(--st-con)"></span> <b>${con}</b> concluídas</span>`;
+/* ---------- dashboards ---------- */
+function ringSVG(pct){const r=46,c=2*Math.PI*r,off=c*(1-pct/100);
+  return `<svg width="112" height="112" viewBox="0 0 112 112"><circle cx="56" cy="56" r="${r}" fill="none" stroke="#EDEFF3" stroke-width="12"/><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--exec)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 56 56)"/><text x="56" y="52" text-anchor="middle" font-size="24" font-weight="800" fill="#1B2430">${pct}%</text><text x="56" y="70" text-anchor="middle" font-size="10" fill="#78879A">executado</text></svg>`;}
+function barRows(gs){return gs.map(g=>`<div class="brow"><div class="bl">${g.dot?`<span class="dotp" style="background:${g.dot}"></span>`:''}${esc(g.label)}</div><div class="bt"><span style="width:${g.pct}%"></span></div><div class="bv"><b>${g.pct}%</b> · ${g.n} dem.</div></div>`).join('');}
+
+function renderHomeSummary(){
+  const n=DATA.length, exec=avg(DATA.map(c=>c.pct)), con=DATA.filter(c=>c.status==='Concluída').length, and=DATA.filter(c=>c.status==='Em andamento').length;
+  const byCoord=COORDS.map(co=>{const g=DATA.filter(c=>c.coord===co.full);return {label:co.short,dot:co.dot,n:g.length,pct:avg(g.map(c=>c.pct))};});
+  document.getElementById('homeSummary').innerHTML=`
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px">
+      <div>${ringSVG(exec)}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,auto);gap:8px 22px">
+        <div><div class="big tabular" style="font-size:26px;font-weight:800">${n}</div><div class="lab" style="color:var(--muted);font-size:12px">iniciativas</div></div>
+        <div><div class="big tabular" style="font-size:26px;font-weight:800;color:var(--st-con)">${con}</div><div class="lab" style="color:var(--muted);font-size:12px">concluídas</div></div>
+        <div><div class="big tabular" style="font-size:26px;font-weight:800;color:var(--st-and)">${and}</div><div class="lab" style="color:var(--muted);font-size:12px">em andamento</div></div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 4px">Execução por coordenação</div>
+    ${barRows(byCoord)}`;
+}
+function renderDash(){
+  const items=filteredA(), n=items.length, overall=avg(items.map(c=>c.pct));
+  const cnt=s=>items.filter(c=>c.status===s).length, nao=cnt('Não iniciada'),and=cnt('Em andamento'),con=cnt('Concluída');
+  const pctOf=k=>n?Math.round(k/n*100):0;
+  const byPrio=PRIOS.map(p=>{const g=items.filter(c=>c.prio===p);return{label:'Prioridade '+p,n:g.length,pct:avg(g.map(c=>c.pct))};});
+  const byComp=COMPS.map(v=>{const g=items.filter(c=>c.comp===v);return{label:v,n:g.length,pct:avg(g.map(c=>c.pct))};});
+  const byCoord=COORDS.map(co=>{const g=items.filter(c=>c.coord===co.full);return{label:co.short,dot:co.dot,n:g.length,pct:avg(g.map(c=>c.pct))};});
+  document.getElementById('dashArea').innerHTML=`<div class="dash">
+    <div class="kpis">
+      <div class="kpi"><div>${ringSVG(overall)}</div><div><div class="lab">Execução geral</div><div class="sub2">média das ${n} iniciativas${(FA.coord||FA.prio)?' (filtro ativo)':''}</div></div></div>
+      <div class="kpi"><div><div class="big tabular">${n}</div><div class="lab">Iniciativas</div></div></div>
+      <div class="kpi"><div><div class="big tabular" style="color:var(--st-con)">${con}</div><div class="lab">Concluídas</div><div class="sub2">${pctOf(con)}% do total</div></div></div>
+      <div class="kpi"><div><div class="big tabular" style="color:var(--st-and)">${and}</div><div class="lab">Em andamento</div><div class="sub2">${nao} não iniciadas</div></div></div>
+    </div>
+    <div class="panel"><h3>Situação das iniciativas</h3><div class="hint">Distribuição por status.</div>
+      <div class="statusbar"><span style="width:${pctOf(nao)}%;background:var(--st-nao)"></span><span style="width:${pctOf(and)}%;background:var(--st-and)"></span><span style="width:${pctOf(con)}%;background:var(--st-con)"></span></div>
+      <div class="slegend"><span class="k"><span class="sq" style="background:var(--st-nao)"></span> Não iniciada — <b>&nbsp;${nao}</b></span><span class="k"><span class="sq" style="background:var(--st-and)"></span> Em andamento — <b>&nbsp;${and}</b></span><span class="k"><span class="sq" style="background:var(--st-con)"></span> Concluída — <b>&nbsp;${con}</b></span></div></div>
+    <div class="panels"><div class="panel"><h3>Execução por prioridade</h3><div class="hint">% médio em cada nível.</div>${barRows(byPrio)}</div><div class="panel"><h3>Execução por complexidade</h3><div class="hint">% médio em cada grau.</div>${barRows(byComp)}</div></div>
+    <div class="panel"><h3>Execução por coordenação</h3><div class="hint">% médio em cada área.</div>${barRows(byCoord)}</div></div>`;
 }
 
-/* editar / novo */
-let editing=null;
+/* ---------- navegação ---------- */
+function go(s){
+  screen=s;
+  document.querySelectorAll('.nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.screen===s));
+  document.getElementById('scr-home').classList.toggle('hidden',s!=='home');
+  document.getElementById('scr-demandas').classList.toggle('hidden',s!=='demandas');
+  document.getElementById('scr-acomp').classList.toggle('hidden',s!=='acomp');
+  if(s==='home') renderHomeSummary();
+  if(s==='demandas') renderBoard();
+  if(s==='acomp') renderDash();
+}
+
+/* ---------- editar ---------- */
 function fillSelects(){
-  document.getElementById('mCoord').innerHTML=COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)} — ${esc(c.full)}</option>`).join('');
-  document.getElementById('fcoord').innerHTML='<option value="">Coordenação: todas</option>'+COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)}</option>`).join('');
+  const o=COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)} — ${esc(c.full)}</option>`).join('');
+  document.getElementById('mCoord').innerHTML=o;
+  const filt='<option value="">Coordenação: todas</option>'+COORDS.map(c=>`<option value="${esc(c.full)}">${esc(c.short)}</option>`).join('');
+  document.getElementById('fcoord').innerHTML=filt; document.getElementById('afcoord').innerHTML=filt;
 }
 function openEdit(id){
+  if(!CAN_EDIT()) return;
   editing=id?DATA.find(c=>c.id===id):null;
   document.getElementById('mTitle').textContent=editing?'Editar demanda':'Nova demanda';
   document.getElementById('mDelete').style.display=editing?'inline-block':'none';
   const g=editing||{coord:COORDS[0].full,titulo:'',oque:'',fonte:'',acesso:'',prio:'A definir',comp:'Média',obs:'',warn:'',status:'Não iniciada',pct:0};
-  mTit.value=g.titulo; mOq.value=g.oque; mFonte.value=g.fonte; mAcesso.value=g.acesso;
-  mCoord.value=g.coord; mPrio.value=g.prio; mComp.value=g.comp; mStatus.value=g.status; mPct.value=g.pct;
-  mObs.value=g.obs||''; mWarn.value=g.warn||'';
+  mTit.value=g.titulo;mOq.value=g.oque;mFonte.value=g.fonte;mAcesso.value=g.acesso;mCoord.value=g.coord;mPrio.value=g.prio;mComp.value=g.comp;mStatus.value=g.status;mPct.value=g.pct;mObs.value=g.obs||'';mWarn.value=g.warn||'';
   document.getElementById('backdrop').classList.add('open'); setTimeout(()=>mTit.focus(),30);
 }
-function closeEdit(){ document.getElementById('backdrop').classList.remove('open'); editing=null; }
-// status <-> pct
-document.getElementById('mStatus').addEventListener('change',e=>{
-  const v=e.target.value; if(v==='Concluída') mPct.value=100; else if(v==='Não iniciada') mPct.value=0;
-  else if(+mPct.value===0||+mPct.value===100) mPct.value=50;
-});
-document.getElementById('mPct').addEventListener('change',e=>{
-  let v=Math.max(0,Math.min(100,+e.target.value||0)); e.target.value=v;
-  if(v===100) mStatus.value='Concluída'; else if(v===0) mStatus.value='Não iniciada'; else mStatus.value='Em andamento';
-});
-function saveEdit(){
+function closeEdit(){document.getElementById('backdrop').classList.remove('open'); editing=null;}
+document.getElementById('mStatus').addEventListener('change',e=>{const v=e.target.value; if(v==='Concluída')mPct.value=100; else if(v==='Não iniciada')mPct.value=0; else if(+mPct.value===0||+mPct.value===100)mPct.value=50;});
+document.getElementById('mPct').addEventListener('change',e=>{let v=Math.max(0,Math.min(100,+e.target.value||0)); e.target.value=v; mStatus.value=v===100?'Concluída':v===0?'Não iniciada':'Em andamento';});
+async function saveEdit(){
   let pct=Math.max(0,Math.min(100,+mPct.value||0));
-  const g={coord:mCoord.value,titulo:mTit.value.trim()||'(sem título)',oque:mOq.value.trim(),
-    fonte:mFonte.value.trim(),acesso:mAcesso.value.trim(),prio:mPrio.value,comp:mComp.value,
-    status:mStatus.value,pct:pct,obs:mObs.value.trim(),warn:mWarn.value.trim()};
-  if(editing) Object.assign(editing,g); else { g.id='d'+Date.now().toString(36); DATA.push(g); }
-  save(); closeEdit(); render();
+  const g={coord:mCoord.value,titulo:mTit.value.trim()||'(sem título)',oque:mOq.value.trim(),fonte:mFonte.value.trim(),acesso:mAcesso.value.trim(),prio:mPrio.value,comp:mComp.value,status:mStatus.value,pct,obs:mObs.value.trim(),warn:mWarn.value.trim()};
+  try{
+    if(editing){ Object.assign(editing,g); await store.update(editing); }
+    else { const created=await store.create(Object.assign({},g)); if(LIVE){ /*api retornou id*/ } }
+    toast('Salvo'); closeEdit(); refreshCurrent();
+  }catch(err){ alert(err.message); }
 }
-function removeCard(id){ const c=DATA.find(x=>x.id===id); if(!c) return;
-  if(confirm('Excluir a demanda “'+c.titulo+'”?')){ DATA=DATA.filter(x=>x.id!==id); save(); render(); } }
+async function removeCard(id){
+  const c=DATA.find(x=>x.id===id); if(!c)return;
+  if(!confirm('Excluir a demanda “'+c.titulo+'”?'))return;
+  try{ await store.remove(id); if(!LIVE) DATA=DATA.filter(x=>x.id!==id); toast('Excluída'); refreshCurrent(); }catch(err){ alert(err.message); }
+}
+function refreshCurrent(){ if(screen==='demandas')renderBoard(); else if(screen==='acomp')renderDash(); else renderHomeSummary(); }
 
-/* exportar / importar */
-function download(name,txt,type){ const b=new Blob([txt],{type}); const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u); }
+/* ---------- exportar/importar ---------- */
+function dl(name,txt,type){const b=new Blob([txt],{type}),u=URL.createObjectURL(b),a=document.createElement('a'); a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);}
 function exportAll(){
-  const csv=['coordenacao,demanda,prioridade,complexidade,status,pct,fonte,acesso']
-    .concat(DATA.map(c=>[c.coord,c.titulo,c.prio,c.comp,c.status,c.pct,c.fonte,c.acesso].map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(','))).join('\n');
-  download('demandas_djud.json', JSON.stringify(DATA,null,1),'application/json');
-  download('demandas_djud.csv','\ufeff'+csv,'text/csv');
+  const csv=['coordenacao,demanda,prioridade,complexidade,status,pct,fonte,acesso'].concat(DATA.map(c=>[c.coord,c.titulo,c.prio,c.comp,c.status,c.pct,c.fonte,c.acesso].map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(','))).join('\n');
+  dl('demandas_djud.json',JSON.stringify(DATA,null,1),'application/json'); dl('demandas_djud.csv','\ufeff'+csv,'text/csv');
 }
 
-document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
-  view=b.dataset.view; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed', x===b)); render();
-}));
-document.getElementById('q').addEventListener('input',e=>{F.q=e.target.value; render();});
-document.getElementById('fcoord').addEventListener('change',e=>{F.coord=e.target.value; render();});
-document.getElementById('fprio').addEventListener('change',e=>{F.prio=e.target.value; render();});
-document.getElementById('fcomp').addEventListener('change',e=>{F.comp=e.target.value; render();});
+/* ---------- login ---------- */
+function updateWho(){
+  document.getElementById('modeBadge').className='modebadge '+(LIVE?'mode-live':'mode-demo');
+  document.getElementById('modeBadge').textContent=LIVE?'Conectado (UFSC)':'Modo demonstração';
+  const who=document.getElementById('who');
+  if(LIVE && auth.token){ who.textContent=''; who.innerHTML=`<b>${esc(auth.email||'')}</b> · ${auth.role==='editor'?'editor':'leitura'}`; document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('logoutBtn').classList.remove('hidden'); }
+  else if(LIVE){ who.textContent=''; document.getElementById('loginBtn').classList.remove('hidden'); document.getElementById('logoutBtn').classList.add('hidden'); }
+  else { who.textContent=''; document.getElementById('loginBtn').classList.add('hidden'); document.getElementById('logoutBtn').classList.add('hidden'); }
+  document.getElementById('addBtn').style.display=CAN_EDIT()?'':'none';
+  document.getElementById('resetBtn').style.display=LIVE?'none':'';
+}
+function openLogin(){ document.getElementById('lErr').textContent=''; document.getElementById('loginBack').classList.add('open'); setTimeout(()=>document.getElementById('lEmail').focus(),30); }
+function closeLogin(){ document.getElementById('loginBack').classList.remove('open'); }
+async function doLogin(){
+  const email=document.getElementById('lEmail').value.trim(), pass=document.getElementById('lPass').value;
+  const errEl=document.getElementById('lErr'); errEl.textContent='';
+  try{
+    const r=await fetch(CONFIG.API_BASE+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    if(!r.ok){ let m='E-mail ou senha inválidos.'; try{const j=await r.json(); m=j.detail||m;}catch(e){} throw new Error(m); }
+    const j=await r.json(); auth.token=j.access_token; auth.role=j.role||'leitor'; auth.email=email;
+    try{localStorage.setItem(TOKKEY,JSON.stringify({t:auth.token,r:auth.role,e:auth.email}));}catch(e){}
+    closeLogin(); updateWho(); await boot(); toast('Bem-vindo(a)');
+  }catch(err){ errEl.textContent=err.message; }
+}
+function doLogout(){ auth={token:null,role:'editor',email:null}; try{localStorage.removeItem(TOKKEY);}catch(e){} updateWho(); DATA=[]; refreshCurrent(); }
+
+/* ---------- boot ---------- */
+async function boot(){
+  try{ DATA=await store.list(); }catch(err){ DATA=[]; if(LIVE && !auth.token){/*precisa login*/} else console.error(err); }
+  refreshCurrent(); renderHomeSummary(); updateWho();
+}
+
+/* ---------- eventos ---------- */
+document.querySelectorAll('.nav button, .cta-btn, #brandHome').forEach(b=>b.addEventListener('click',()=>{ const s=b.dataset.screen|| (b.id==='brandHome'?'home':null); if(s) go(s); }));
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{ view=b.dataset.view; document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); renderBoard(); }));
+document.getElementById('q').addEventListener('input',e=>{F.q=e.target.value; renderBoard();});
+document.getElementById('fcoord').addEventListener('change',e=>{F.coord=e.target.value; renderBoard();});
+document.getElementById('fprio').addEventListener('change',e=>{F.prio=e.target.value; renderBoard();});
+document.getElementById('fcomp').addEventListener('change',e=>{F.comp=e.target.value; renderBoard();});
+document.getElementById('afcoord').addEventListener('change',e=>{FA.coord=e.target.value; renderDash();});
+document.getElementById('afprio').addEventListener('change',e=>{FA.prio=e.target.value; renderDash();});
 document.getElementById('addBtn').addEventListener('click',()=>openEdit(null));
 document.getElementById('mSave').addEventListener('click',saveEdit);
 document.getElementById('mCancel').addEventListener('click',closeEdit);
 document.getElementById('mDelete').addEventListener('click',()=>{ if(editing){const id=editing.id; closeEdit(); removeCard(id);} });
-document.getElementById('backdrop').addEventListener('click',e=>{ if(e.target.id==='backdrop') closeEdit(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeEdit(); });
+document.getElementById('backdrop').addEventListener('click',e=>{if(e.target.id==='backdrop')closeEdit();});
 document.getElementById('expBtn').addEventListener('click',exportAll);
 document.getElementById('impBtn').addEventListener('click',()=>document.getElementById('impFile').click());
-document.getElementById('impFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
-  r.onload=()=>{ try{ const d=JSON.parse(r.result); if(Array.isArray(d)){ DATA=d.map(normalize); save(); render(); } else alert('Arquivo inválido.'); }catch(err){ alert('Não consegui ler o arquivo.'); } };
-  r.readAsText(f); e.target.value=''; });
-document.getElementById('resetBtn').addEventListener('click',()=>{ if(confirm('Reiniciar para a versão original? Isso descarta as alterações feitas aqui.')){ DATA=SEED.map(normalize); save(); render(); } });
-document.getElementById('fsBtn').addEventListener('click',()=>{ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
+document.getElementById('impFile').addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=async()=>{try{const d=JSON.parse(r.result); if(!Array.isArray(d))throw 0; if(LIVE){ if(!confirm('Importar substitui os dados no servidor pelas linhas do arquivo. Continuar?'))return; for(const c of d){ const n=normalize(c); if(DATA.find(x=>x.id===n.id)) await store.update(n); else await store.create(n);} DATA=await store.list(); } else { DATA=d.map(normalize); await localStore.persist(); } refreshCurrent();}catch(err){alert('Arquivo inválido.');}}; r.readAsText(f); e.target.value='';});
+document.getElementById('resetBtn').addEventListener('click',async()=>{ if(confirm('Reiniciar para a versão original? Descarta as alterações locais.')){ await store.resetSeed(); refreshCurrent(); } });
+document.getElementById('fsBtn').addEventListener('click',()=>{ if(!document.fullscreenElement)document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); });
+document.getElementById('loginBtn').addEventListener('click',openLogin);
+document.getElementById('logoutBtn').addEventListener('click',doLogout);
+document.getElementById('lSubmit').addEventListener('click',doLogin);
+document.getElementById('lCancel').addEventListener('click',closeLogin);
+document.getElementById('lPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeEdit();closeLogin();}});
 
-fillSelects(); render();
+/* init */
+fillSelects();
+if(LIVE){ try{const s=JSON.parse(localStorage.getItem(TOKKEY)); if(s&&s.t){auth.token=s.t;auth.role=s.r;auth.email=s.e;}}catch(e){} }
+updateWho();
+go('home');
+boot();
 </script>
 </body>
 </html>
