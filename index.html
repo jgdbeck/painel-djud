@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel DJUD — priorização e acompanhamento</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="tbrow">
+    <div class="brand" id="brandHome"><div class="logo">DJ</div><div><h1>Painel DJUD</h1><div class="sub">Judicialização de medicamentos</div></div></div>
+    <nav class="nav" aria-label="Seções">
+      <button data-screen="home" aria-current="true">Início</button>
+      <button data-screen="demandas" aria-current="false">Demandas</button>
+      <button data-screen="acomp" aria-current="false">Acompanhamento</button>
+    </nav>
+    <div class="spacer"></div>
+    <span class="modebadge mode-demo" id="modeBadge">Modo demonstração</span>
+    <span class="who" id="who"></span>
+    <button class="btn" id="fsBtn" title="Tela cheia">⛶</button>
+    <button class="btn" id="loginBtn">Entrar para editar</button>
+    <button class="btn hidden" id="logoutBtn">Sair</button>
+  </div>
+</header>
+
+<!-- HOME -->
+<main class="wrap" id="scr-home">
+  <section class="hero">
+    <div class="eyebrow">Plataforma de gestão do projeto</div>
+    <h2>Priorização e acompanhamento das demandas de dados do DJUD</h2>
+    <p>Um lugar único para enxergar todas as iniciativas do projeto — organizadas por coordenação, prioridade e complexidade — e acompanhar quanto de cada uma já foi executado.</p>
+    <div class="cta">
+      <button class="cta-btn b1" data-screen="demandas"><span class="ic">▤</span><span><span class="t">Demandas</span><span class="d">Ver, priorizar, mover e editar as iniciativas</span></span></button>
+      <button class="cta-btn b2" data-screen="acomp"><span class="ic">◔</span><span><span class="t">Acompanhamento</span><span class="d">Gráficos de execução por prioridade e coordenação</span></span></button>
+    </div>
+  </section>
+  <div class="home-grid">
+    <div class="panel"><h3>Panorama atual</h3><div class="hint">Resumo do que está cadastrado no projeto.</div><div id="homeSummary"></div></div>
+    <div class="about">
+      <h3>Sobre a plataforma</h3>
+      <p>Reúne as demandas levantadas com as coordenações do Departamento e apoia a priorização junto à direção.</p>
+      <ul>
+        <li><b>Prioridade</b> — número (1 = mais alta), indicada pela área.</li>
+        <li><b>Complexidade</b> — palavra (Baixa a Muito alta), leitura técnica de esforço e acesso.</li>
+        <li><b>Execução</b> — status e % de cada iniciativa, que alimentam os gráficos.</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<!-- DEMANDAS -->
+<main class="wrap hidden" id="scr-demandas">
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Agrupar por">
+      <button data-view="coord" aria-pressed="true">Coordenação</button>
+      <button data-view="prio" aria-pressed="false">Prioridade</button>
+      <button data-view="comp" aria-pressed="false">Complexidade</button>
+    </div>
+    <input id="q" class="input" type="search" placeholder="Buscar demanda…" style="width:180px">
+    <!-- os <option> destes selects são gerados em fillSelects(), a partir de data.js -->
+    <select id="fcoord" class="select" aria-label="Filtrar por coordenação"></select>
+    <select id="fprio" class="select" aria-label="Filtrar por prioridade"></select>
+    <select id="fcomp" class="select" aria-label="Filtrar por complexidade"></select>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="addBtn">＋ Nova demanda</button>
+    <button class="btn" id="expJsonBtn" title="Backup completo, que o botão Importar lê de volta">Exportar JSON</button>
+    <button class="btn" id="expCsvBtn" title="Para abrir no Excel">Exportar CSV</button>
+    <button class="btn" id="impBtn">Importar</button>
+    <button class="btn" id="resetBtn">Reiniciar</button>
+    <input type="file" id="impFile" accept="application/json" hidden>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div id="boardArea"></div>
+</main>
+
+<!-- ACOMPANHAMENTO -->
+<main class="wrap hidden" id="scr-acomp">
+  <div class="controls">
+    <select id="afcoord" class="select" aria-label="Filtrar por coordenação"></select>
+    <select id="afprio" class="select" aria-label="Filtrar por prioridade"></select>
+    <div class="spacer"></div>
+  </div>
+  <div id="dashArea"></div>
+</main>
+
+<!-- modal editar -->
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-head"><h3 id="mTitle">Editar demanda</h3></div>
+    <div class="modal-body">
+      <div><label class="f" for="mTit">Demanda</label><input id="mTit" class="finput"></div>
+      <div><label class="f" for="mOq">O que entrega</label><textarea id="mOq" class="ftext"></textarea></div>
+      <div class="row2"><div><label class="f" for="mFonte">Fonte (origem do dado)</label><input id="mFonte" class="finput"></div><div><label class="f" for="mAcesso">Acesso</label><input id="mAcesso" class="finput"></div></div>
+      <div class="row3">
+        <div><label class="f" for="mCoord">Coordenação</label><select id="mCoord" class="fselect"></select></div>
+        <div><label class="f" for="mPrio">Prioridade</label><select id="mPrio" class="fselect"></select></div>
+        <div><label class="f" for="mComp">Complexidade</label><select id="mComp" class="fselect"></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="mStatus">Status de execução</label><select id="mStatus" class="fselect"></select></div>
+        <div><label class="f" for="mPct">% executado</label><input id="mPct" class="finput" type="number" min="0" max="100" step="5"></div>
+      </div>
+      <div class="row2"><div><label class="f" for="mObs">Observação da prioridade</label><input id="mObs" class="finput"></div><div><label class="f" for="mWarn">Alerta (opcional)</label><input id="mWarn" class="finput"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn-del" id="mDelete">Excluir</button><div class="spacer"></div><button class="btn-ghost" id="mCancel">Cancelar</button><button class="btn-save" id="mSave">Salvar</button></div>
+  </div>
+</div>
+
+<!-- modal login: senha compartilhada, sem cadastro de usuários -->
+<div class="backdrop" id="loginBack">
+  <div class="modal sm" role="dialog" aria-modal="true" aria-labelledby="lTitle">
+    <div class="modal-head"><h3 id="lTitle">Entrar para editar</h3></div>
+    <div class="modal-body">
+      <p style="margin:0;color:var(--ink-soft);font-size:13px">O painel é aberto para consulta. Para alterar as demandas, informe a senha da equipe.</p>
+      <div><label class="f" for="lPass">Senha</label><input id="lPass" class="finput" type="password" autocomplete="current-password"></div>
+      <div class="err" id="lErr"></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div><button class="btn-ghost" id="lCancel">Cancelar</button><button class="btn-save" id="lSubmit">Entrar</button></div>
+  </div>
+</div>
+<div class="savednote" id="savednote">Salvo</div>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
