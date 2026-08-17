@@ -46,24 +46,29 @@ button{font-family:inherit} h1,h2,h3{margin:0} .tabular{font-variant-numeric:tab
 .select{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' fill='none' stroke='%237C889A' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
 
 /* ---------- HOME ---------- */
-.hero{background:linear-gradient(135deg,#1B2430,#243244 60%,#1f3a37);color:#fff;border-radius:20px;padding:38px 40px;position:relative;overflow:hidden}
-.hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(46,139,139,.35),transparent 70%)}
-.hero .eyebrow{color:#8FE0C4;font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
-.hero h2{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:8px;max-width:760px;line-height:1.15}
-.hero p{color:#C4CFDB;font-size:15px;max-width:680px;margin-top:12px}
-.hero .cta{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
-.cta-btn{display:flex;align-items:center;gap:12px;background:#fff;color:#1B2430;border:0;border-radius:14px;padding:15px 20px;cursor:pointer;text-align:left;min-width:230px}
-.cta-btn:hover{transform:translateY(-1px)}
-.cta-btn .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+.hero{background:linear-gradient(135deg,#1B2430,#243244 58%,#1f3a37);color:#fff;border-radius:18px;padding:44px 46px;position:relative;overflow:hidden;border:1px solid rgba(143,224,196,.10)}
+.hero:after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(46,139,139,.32),transparent 70%)}
+.hero>*{position:relative;z-index:1}
+.hero .eyebrow{color:#8FE0C4;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.hero h2{font-size:31px;font-weight:800;letter-spacing:-.02em;margin-top:10px;max-width:780px;line-height:1.16}
+.hero p{color:#C4CFDB;font-size:15px;max-width:700px;margin-top:14px;line-height:1.55}
+.hero .cta{display:flex;gap:16px;margin-top:30px;flex-wrap:wrap}
+.cta-btn{flex:1 1 280px;display:flex;align-items:center;gap:14px;background:#fff;color:#1B2430;border:0;border-radius:14px;padding:18px 20px;cursor:pointer;text-align:left;box-shadow:0 6px 22px rgba(0,0,0,.16);transition:transform .12s,box-shadow .12s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.22)}
+.cta-btn .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:0 0 auto}
 .cta-btn.b1 .ic{background:var(--p1-bg);color:var(--p1)} .cta-btn.b2 .ic{background:var(--cx-bx-bg);color:var(--cx-bx)}
-.cta-btn .t{font-weight:750;font-size:15px} .cta-btn .d{color:#5A6472;font-size:12.5px}
-.home-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+.cta-btn .tx{flex:1;min-width:0}
+.cta-btn .t{display:block;font-weight:750;font-size:15.5px;letter-spacing:-.01em}
+.cta-btn .d{display:block;color:#5A6472;font-size:12.5px;margin-top:4px;line-height:1.4}
+.cta-btn .arrow{flex:0 0 auto;color:#AAB4C0;font-size:20px;transition:transform .12s,color .12s}
+.cta-btn:hover .arrow{transform:translateX(3px);color:#5A6472}
+.home-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-top:18px}
 @media (max-width:900px){.home-grid{grid-template-columns:1fr}}
-.about{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
-.about h3{font-size:14px;font-weight:750;margin-bottom:8px}
-.about p{color:var(--ink-soft);font-size:13.5px;margin:0 0 10px}
+.about{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow)}
+.about h3{font-size:14px;font-weight:750;margin-bottom:10px}
+.about p{color:var(--ink-soft);font-size:13.5px;margin:0 0 12px;line-height:1.55}
 .about ul{margin:0;padding-left:18px;color:var(--ink-soft);font-size:13.5px}
-.about li{margin:4px 0}
+.about li{margin:7px 0;line-height:1.5}
 
 /* ---------- board / cards / dash (herdado) ---------- */
 .legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12.5px;margin:2px 2px 16px}

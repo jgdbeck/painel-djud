@@ -199,7 +199,7 @@ function renderLegend() {
     <span class="k"><span data-comp="Alta"><span class="chip" style="border:1px solid var(--cx-al-bd);padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700">Complexidade</span></span> (palavra)</span>
     <span class="k"><span class="stbadge" data-status="Em andamento">Em andamento</span> execução + %</span>
     ${CAN_EDIT()
-      ? '<span class="k" style="color:#9AA6B4">Arraste para reclassificar · lápis para editar</span>'
+      ? '<span class="k" style="color:#9AA6B4">Arraste um cartão para reclassificar · clique no lápis para editar</span>'
       : '<span class="k" style="color:#9AA6B4">Somente leitura — clique em “Entrar para editar”</span>'}`;
 }
 
@@ -216,7 +216,7 @@ function renderBoard() {
       sec.innerHTML = `<div class="section-head"><span class="cdot" style="background:${co.dot}"></span><h2>${esc(co.full)}</h2><span class="count">${cs.length}</span></div><div class="grid"></div>`;
       const grid = sec.querySelector('.grid');
       if (cs.length) cs.forEach(c => grid.appendChild(cardEl(c)));
-      else grid.innerHTML = '<div class="empty">Sem demandas</div>';
+      else grid.innerHTML = '<div class="empty">Nenhuma demanda nesta coordenação</div>';
       wireDrop(sec, 'coord', co.full);
       area.appendChild(sec);
     });
@@ -231,7 +231,7 @@ function renderBoard() {
       col.innerHTML = `<div class="col-head"><span class="lbl">${esc(view === 'prio' ? 'Prioridade ' + v : v)}</span><span class="count">${cs.length}</span></div><div class="grid"></div>`;
       const grid = col.querySelector('.grid');
       if (cs.length) cs.forEach(c => grid.appendChild(cardEl(c)));
-      else grid.innerHTML = '<div class="empty">Arraste para cá</div>';
+      else grid.innerHTML = '<div class="empty">Arraste demandas para esta coluna</div>';
       wireDrop(col, view, v);
       wrap.appendChild(col);
     });
@@ -281,11 +281,11 @@ function renderDash() {
       <div class="kpi"><div><div class="big tabular" style="color:var(--st-con)">${con}</div><div class="lab">Concluídas</div><div class="sub2">${pctOf(con)}% do total</div></div></div>
       <div class="kpi"><div><div class="big tabular" style="color:var(--st-and)">${and}</div><div class="lab">Em andamento</div><div class="sub2">${nao} não iniciadas</div></div></div>
     </div>
-    <div class="panel"><h3>Situação das iniciativas</h3><div class="hint">Distribuição por status.</div>
+    <div class="panel"><h3>Situação das iniciativas</h3><div class="hint">Distribuição das iniciativas por situação de execução.</div>
       <div class="statusbar"><span style="width:${pctOf(nao)}%;background:var(--st-nao)"></span><span style="width:${pctOf(and)}%;background:var(--st-and)"></span><span style="width:${pctOf(con)}%;background:var(--st-con)"></span></div>
       <div class="slegend"><span class="k"><span class="sq" style="background:var(--st-nao)"></span> Não iniciada — <b>&nbsp;${nao}</b></span><span class="k"><span class="sq" style="background:var(--st-and)"></span> Em andamento — <b>&nbsp;${and}</b></span><span class="k"><span class="sq" style="background:var(--st-con)"></span> Concluída — <b>&nbsp;${con}</b></span></div></div>
-    <div class="panels"><div class="panel"><h3>Execução por prioridade</h3><div class="hint">% médio em cada nível.</div>${barRows(byPrio)}</div><div class="panel"><h3>Execução por complexidade</h3><div class="hint">% médio em cada grau.</div>${barRows(byComp)}</div></div>
-    <div class="panel"><h3>Execução por coordenação</h3><div class="hint">% médio em cada área.</div>${barRows(byCoord)}</div></div>`;
+    <div class="panels"><div class="panel"><h3>Execução por prioridade</h3><div class="hint">Percentual médio de execução em cada nível de prioridade.</div>${barRows(byPrio)}</div><div class="panel"><h3>Execução por complexidade</h3><div class="hint">Percentual médio de execução em cada grau de complexidade.</div>${barRows(byComp)}</div></div>
+    <div class="panel"><h3>Execução por coordenação</h3><div class="hint">Percentual médio de execução em cada coordenação.</div>${barRows(byCoord)}</div></div>`;
 }
 
 /* ---------- navegação ---------- */
@@ -452,7 +452,7 @@ function forgetPass() {
 
 /* ---------- boot ---------- */
 async function boot() {
-  if (LIVE) el('boardArea').innerHTML = '<div class="loading">Carregando as demandas da planilha…</div>';
+  if (LIVE) el('boardArea').innerHTML = '<div class="loading">Carregando as demandas da planilha, aguarde…</div>';
   try {
     DATA = await store.list();
   } catch (err) {
