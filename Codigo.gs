@@ -23,7 +23,7 @@
 var SHEET_NAME = 'demandas';
 
 /** A ordem define as colunas da planilha. `id` PRECISA ser a coluna A. */
-var FIELDS = ['id', 'coord', 'titulo', 'oque', 'fonte', 'acesso', 'prio', 'comp', 'obs', 'warn', 'status', 'pct'];
+var FIELDS = ['id', 'coord', 'titulo', 'oque', 'fonte', 'acesso', 'prio', 'comp', 'obs', 'warn', 'status', 'pct', 'produto', 'prazo'];
 
 /* ---------------- rotas ---------------- */
 

@@ -22,14 +22,16 @@ const el = id => document.getElementById(id);
 function normalize(c, i) {
   const d = Object.assign({
     id: '', coord: COORDS[0].full, titulo: '', oque: '', fonte: '', acesso: '',
-    prio: 'A definir', comp: 'Média', obs: '', warn: '', status: 'Não iniciada', pct: 0
+    prio: 'A definir', comp: 'Média', obs: '', warn: '', status: 'Não iniciada', pct: 0,
+    produto: '', prazo: 'A definir'
   }, c);
   d.id = String(d.id || 'd' + (typeof i === 'number' ? i : Date.now().toString(36)));
   d.prio = PRIOS.includes(String(d.prio)) ? String(d.prio) : 'A definir';
   d.comp = COMPS.includes(d.comp) ? d.comp : 'Média';
   d.status = STATUS.includes(d.status) ? d.status : 'Não iniciada';
+  d.prazo = (typeof PRAZOS !== 'undefined' && PRAZOS.includes(d.prazo)) ? d.prazo : 'A definir';
   d.pct = Math.max(0, Math.min(100, Math.round(Number(d.pct) || 0)));
-  ['coord', 'titulo', 'oque', 'fonte', 'acesso', 'obs', 'warn'].forEach(k => d[k] = d[k] == null ? '' : String(d[k]));
+  ['coord', 'titulo', 'oque', 'fonte', 'acesso', 'obs', 'warn', 'produto'].forEach(k => d[k] = d[k] == null ? '' : String(d[k]));
   return d;
 }
 
@@ -146,6 +148,7 @@ function cardEl(c) {
   node.innerHTML = `
     <div class="card-top">
       <span class="coordchip"><span class="cdot" style="background:${dotOf(c.coord)}"></span>${esc(shortOf(c.coord))}</span>
+      ${c.prazo && c.prazo !== 'A definir' ? `<span class="prazochip" data-prazo="${esc((typeof PRAZO_KIND!=='undefined'&&PRAZO_KIND[c.prazo])||'adef')}">${esc(c.prazo)}</span>` : ''}
       ${canEdit ? `<div class="card-actions"><button class="iconbtn" title="Editar" data-act="edit">✎</button><button class="iconbtn del" title="Excluir" data-act="del">🗑</button></div>` : ''}
     </div>
     <div class="card-title">${esc(c.titulo)}</div>
@@ -289,17 +292,61 @@ function renderDash() {
 }
 
 /* ---------- navegação ---------- */
+/* ---------- plano de trabalho (agrupado por produto) ---------- */
+function renderPlano() {
+  const host = el('planoArea');
+  const SEP = 'Extração de documentos do SEI (separado)';
+  const ordem = (typeof PRODUTOS !== 'undefined' ? PRODUTOS : []);
+  let html = '';
+
+  ordem.filter(p => p !== SEP).forEach(prod => {
+    const cs = DATA.filter(c => c.produto === prod);
+    if (!cs.length) return;
+    const unico = cs.length > 1 ? `<span class="prod-unico">Produto único · reúne ${cs.length} demandas</span>` : '';
+    html += `<section class="prod">
+      <div class="prod-head"><h2>${esc(prod)}</h2><span class="count">${cs.length}</span>${unico}</div>
+      <div class="grid" id="prod_${esc(prod).replace(/[^a-zA-Z]/g,'')}"></div></section>`;
+  });
+
+  const seps = DATA.filter(c => c.produto === SEP);
+  if (seps.length) {
+    html += `<section class="prod prod-sep">
+      <div class="prod-head"><h2>Fora do plano por ora — extração de documentos do SEI</h2><span class="count">${seps.length}</span></div>
+      <div class="prod-note">Dependem de ler o conteúdo de dentro dos documentos do processo (não só a tramitação). Ficam separadas, sem prazo, até validar o acesso ao serviço de extração.</div>
+      <div class="grid" id="prod_SEP"></div></section>`;
+  }
+
+  const semprod = DATA.filter(c => !c.produto);
+  if (semprod.length) {
+    html += `<section class="prod"><div class="prod-head"><h2>Sem produto definido</h2><span class="count">${semprod.length}</span></div><div class="grid" id="prod_SEM"></div></section>`;
+  }
+
+  host.innerHTML = html || '<div class="empty">Nenhuma demanda com produto definido.</div>';
+
+  // preencher os grids com os cards
+  ordem.filter(p => p !== SEP).forEach(prod => {
+    const cs = DATA.filter(c => c.produto === prod);
+    if (!cs.length) return;
+    const g = el('prod_' + prod.replace(/[^a-zA-Z]/g, ''));
+    if (g) sortCards(cs, 'coord').forEach(c => g.appendChild(cardEl(c)));
+  });
+  if (seps.length) { const g = el('prod_SEP'); seps.forEach(c => g.appendChild(cardEl(c))); }
+  if (semprod.length) { const g = el('prod_SEM'); semprod.forEach(c => g.appendChild(cardEl(c))); }
+}
+
 function go(s) {
   screen = s;
   document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.screen === s));
   el('scr-home').classList.toggle('hidden', s !== 'home');
   el('scr-demandas').classList.toggle('hidden', s !== 'demandas');
   el('scr-acomp').classList.toggle('hidden', s !== 'acomp');
+  el('scr-plano').classList.toggle('hidden', s !== 'plano');
   refreshCurrent();
 }
 function refreshCurrent() {
   if (screen === 'demandas') renderBoard();
   else if (screen === 'acomp') renderDash();
+  else if (screen === 'plano') renderPlano();
   else renderHomeSummary();
 }
 
@@ -312,6 +359,8 @@ function fillSelects() {
   el('mPrio').innerHTML = opts(PRIOS);
   el('mComp').innerHTML = opts(COMPS);
   el('mStatus').innerHTML = opts(STATUS);
+  el('mProduto').innerHTML = '<option value="">(sem produto)</option>' + opts(PRODUTOS);
+  el('mPrazo').innerHTML = opts(PRAZOS);
   const coordFilter = '<option value="">Coordenação: todas</option>' + COORDS.map(c => `<option value="${esc(c.full)}">${esc(c.short)}</option>`).join('');
   el('fcoord').innerHTML = coordFilter;
   el('afcoord').innerHTML = coordFilter;
@@ -329,6 +378,7 @@ function openEdit(id) {
   el('mTit').value = g.titulo; el('mOq').value = g.oque; el('mFonte').value = g.fonte; el('mAcesso').value = g.acesso;
   el('mCoord').value = g.coord; el('mPrio').value = g.prio; el('mComp').value = g.comp;
   el('mStatus').value = g.status; el('mPct').value = g.pct; el('mObs').value = g.obs; el('mWarn').value = g.warn;
+  el('mProduto').value = g.produto || ''; el('mPrazo').value = g.prazo || 'A definir';
   el('backdrop').classList.add('open');
   setTimeout(() => el('mTit').focus(), 30);
 }
@@ -346,7 +396,9 @@ async function saveEdit() {
     status: el('mStatus').value,
     pct: Math.max(0, Math.min(100, +el('mPct').value || 0)),
     obs: el('mObs').value.trim(),
-    warn: el('mWarn').value.trim()
+    warn: el('mWarn').value.trim(),
+    produto: el('mProduto').value,
+    prazo: el('mPrazo').value
   };
   const alvo = editing;
   try {

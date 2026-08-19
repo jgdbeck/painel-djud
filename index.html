@@ -14,6 +14,7 @@
       <button data-screen="home" aria-current="true">Início</button>
       <button data-screen="demandas" aria-current="false">Demandas</button>
       <button data-screen="acomp" aria-current="false">Acompanhamento</button>
+      <button data-screen="plano" aria-current="false">Plano</button>
     </nav>
     <div class="spacer"></div>
     <span class="modebadge mode-demo" id="modeBadge">Modo demonstração</span>
@@ -92,6 +93,15 @@
   <div id="dashArea"></div>
 </main>
 
+<!-- PLANO DE TRABALHO -->
+<main class="wrap hidden" id="scr-plano">
+  <div class="legend" style="margin-bottom:14px">
+    <span class="k">Demandas agrupadas em <b>produtos</b> (várias demandas → uma entrega). Prazo por <b>prioridade × complexidade</b>: prioridade alta + baixa complexidade = curto prazo.</span>
+    <span class="k"><span class="prazochip" data-prazo="curto">Curto prazo</span> <span class="prazochip" data-prazo="medio">Médio prazo</span> <span class="prazochip" data-prazo="longo">Longo prazo</span></span>
+  </div>
+  <div id="planoArea"></div>
+</main>
+
 <!-- modal editar -->
 <div class="backdrop" id="backdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -110,6 +120,7 @@
         <div><label class="f" for="mPct">% executado</label><input id="mPct" class="finput" type="number" min="0" max="100" step="5"></div>
       </div>
       <div class="row2"><div><label class="f" for="mObs">Observação da prioridade</label><input id="mObs" class="finput"></div><div><label class="f" for="mWarn">Alerta (opcional)</label><input id="mWarn" class="finput"></div></div>
+      <div class="row2"><div><label class="f" for="mProduto">Produto (agrupamento do plano)</label><select id="mProduto" class="fselect"></select></div><div><label class="f" for="mPrazo">Prazo</label><select id="mPrazo" class="fselect"></select></div></div>
     </div>
     <div class="modal-foot"><button class="btn-del" id="mDelete">Excluir</button><div class="spacer"></div><button class="btn-ghost" id="mCancel">Cancelar</button><button class="btn-save" id="mSave">Salvar</button></div>
   </div>
