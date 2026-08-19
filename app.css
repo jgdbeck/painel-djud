@@ -177,3 +177,23 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .prod-note{color:var(--muted);font-size:12.5px;margin:10px 2px 0;line-height:1.5}
 .prod-sep .prod-head{background:#7d2b26}
 .prod .grid{margin-top:12px}
+
+/* ---------- faixas por prazo (visão Plano) ---------- */
+.horizon{margin-bottom:26px}
+.horizon-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;color:#fff;box-shadow:var(--shadow)}
+.horizon-head .hz-tag{font-weight:800;font-size:13.5px;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.horizon-head .hz-desc{font-size:12px;opacity:.92;flex:1;line-height:1.35}
+.horizon-head .hz-count{background:rgba(255,255,255,.22);font-weight:700;font-size:12.5px;padding:2px 11px;border-radius:999px}
+.horizon-head[data-prazo="curto"]{background:#1E7A4B}
+.horizon-head[data-prazo="medio"]{background:#A86A0C}
+.horizon-head[data-prazo="longo"]{background:#B23A34}
+.horizon-head[data-prazo="adef"]{background:#5A6472}
+.horizon-body{padding-top:14px}
+.prod-sub{margin-bottom:16px}
+.prod-sub-head{display:flex;align-items:center;gap:9px;padding:0 2px 9px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.prod-sub-head h3{font-size:13px;font-weight:750;color:var(--ink);letter-spacing:-.01em}
+.prod-sub-head .count{color:var(--muted);font-size:12px;font-weight:600}
+.prod-sub-head.sep h3{color:#B23A34}
+.prod-sub-head .prod-unico{margin-left:auto;font-size:11px;font-weight:700;color:#1E7A4B;background:#E3F1E9;border:1px solid #BFE3CE;padding:2px 10px;border-radius:999px}
+.prod-sub .grid{margin-top:0}
+@media (max-width:640px){.horizon-head .hz-desc{display:none}}

@@ -292,46 +292,54 @@ function renderDash() {
 }
 
 /* ---------- navegação ---------- */
-/* ---------- plano de trabalho (agrupado por produto) ---------- */
+/* ---------- plano de trabalho (faixas por prazo, produtos dentro) ---------- */
 function renderPlano() {
   const host = el('planoArea');
+  const HZ = [
+    { prazo: 'Curto prazo', kind: 'curto', desc: 'Prioridade alta e baixa complexidade, ou dado já disponível. Primeiras entregas.' },
+    { prazo: 'Médio prazo', kind: 'medio', desc: 'Depende de liberar um acesso (execução rápida depois) ou de consolidar uma base.' },
+    { prazo: 'Longo prazo', kind: 'longo', desc: 'Depende de bases consolidadas ou de regras ainda a definir.' },
+    { prazo: 'A definir', kind: 'adef', desc: 'Casos indefinidos — inclui o que depende da extração de documentos do SEI e acessos em articulação.' }
+  ];
+  const ordemProd = (typeof PRODUTOS !== 'undefined' ? PRODUTOS : []);
   const SEP = 'Extração de documentos do SEI (separado)';
-  const ordem = (typeof PRODUTOS !== 'undefined' ? PRODUTOS : []);
   let html = '';
-
-  ordem.filter(p => p !== SEP).forEach(prod => {
-    const cs = DATA.filter(c => c.produto === prod);
-    if (!cs.length) return;
-    const unico = cs.length > 1 ? `<span class="prod-unico">Produto único · reúne ${cs.length} demandas</span>` : '';
-    html += `<section class="prod">
-      <div class="prod-head"><h2>${esc(prod)}</h2><span class="count">${cs.length}</span>${unico}</div>
-      <div class="grid" id="prod_${esc(prod).replace(/[^a-zA-Z]/g,'')}"></div></section>`;
+  HZ.forEach(h => {
+    const inHz = DATA.filter(c => (c.prazo || 'A definir') === h.prazo);
+    if (!inHz.length) return;
+    html += `<section class="horizon">
+      <div class="horizon-head" data-prazo="${h.kind}">
+        <span class="hz-tag">${esc(h.prazo)}</span>
+        <span class="hz-desc">${esc(h.desc)}</span>
+        <span class="hz-count">${inHz.length}</span>
+      </div>
+      <div class="horizon-body" id="hz_${h.kind}"></div></section>`;
   });
+  host.innerHTML = html || '<div class="empty">Nenhuma demanda no plano.</div>';
 
-  const seps = DATA.filter(c => c.produto === SEP);
-  if (seps.length) {
-    html += `<section class="prod prod-sep">
-      <div class="prod-head"><h2>Fora do plano por ora — extração de documentos do SEI</h2><span class="count">${seps.length}</span></div>
-      <div class="prod-note">Dependem de ler o conteúdo de dentro dos documentos do processo (não só a tramitação). Ficam separadas, sem prazo, até validar o acesso ao serviço de extração.</div>
-      <div class="grid" id="prod_SEP"></div></section>`;
-  }
-
-  const semprod = DATA.filter(c => !c.produto);
-  if (semprod.length) {
-    html += `<section class="prod"><div class="prod-head"><h2>Sem produto definido</h2><span class="count">${semprod.length}</span></div><div class="grid" id="prod_SEM"></div></section>`;
-  }
-
-  host.innerHTML = html || '<div class="empty">Nenhuma demanda com produto definido.</div>';
-
-  // preencher os grids com os cards
-  ordem.filter(p => p !== SEP).forEach(prod => {
-    const cs = DATA.filter(c => c.produto === prod);
-    if (!cs.length) return;
-    const g = el('prod_' + prod.replace(/[^a-zA-Z]/g, ''));
-    if (g) sortCards(cs, 'coord').forEach(c => g.appendChild(cardEl(c)));
+  HZ.forEach(h => {
+    const body = el('hz_' + h.kind); if (!body) return;
+    const inHz = DATA.filter(c => (c.prazo || 'A definir') === h.prazo);
+    const prods = ordemProd.filter(p => inHz.some(c => c.produto === p));
+    const semProd = inHz.filter(c => !c.produto || !ordemProd.includes(c.produto));
+    prods.forEach(prod => {
+      const cs = sortCards(inHz.filter(c => c.produto === prod), 'coord');
+      const unico = cs.length > 1 ? `<span class="prod-unico">Produto único · ${cs.length} demandas</span>` : '';
+      const isSep = prod === SEP;
+      const sub = document.createElement('div'); sub.className = 'prod-sub';
+      sub.innerHTML = `<div class="prod-sub-head${isSep ? ' sep' : ''}"><h3>${esc(prod)}</h3><span class="count">${cs.length}</span>${unico}</div><div class="grid"></div>`;
+      const grid = sub.querySelector('.grid');
+      cs.forEach(c => grid.appendChild(cardEl(c)));
+      body.appendChild(sub);
+    });
+    if (semProd.length) {
+      const sub = document.createElement('div'); sub.className = 'prod-sub';
+      sub.innerHTML = `<div class="prod-sub-head"><h3>Sem produto definido</h3><span class="count">${semProd.length}</span></div><div class="grid"></div>`;
+      const grid = sub.querySelector('.grid');
+      sortCards(semProd, 'coord').forEach(c => grid.appendChild(cardEl(c)));
+      body.appendChild(sub);
+    }
   });
-  if (seps.length) { const g = el('prod_SEP'); seps.forEach(c => g.appendChild(cardEl(c))); }
-  if (semprod.length) { const g = el('prod_SEM'); semprod.forEach(c => g.appendChild(cardEl(c))); }
 }
 
 function go(s) {
