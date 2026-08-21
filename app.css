@@ -218,3 +218,8 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .pcard-obs{margin-top:11px;font-size:11.6px;color:var(--muted);line-height:1.5;background:var(--page);border-radius:8px;padding:8px 10px}
 .pcard-obs b{color:var(--ink-soft)}
 .prod-unico{font-size:11px;font-weight:700;color:#1E7A4B;background:#E3F1E9;border:1px solid #BFE3CE;padding:2px 10px;border-radius:999px}
+
+/* ações de edição no card de produto */
+.pcard-actions{opacity:0;transition:opacity .12s}
+.pcard:hover .pcard-actions,.pcard:focus-within .pcard-actions{opacity:1}
+.pcard-head{align-items:center}

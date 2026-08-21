@@ -60,7 +60,8 @@ const localStore = {
   async remove(id) {},
   async replaceAll(list) { DATA = list; await this.persist(); return DATA; },
   async resetSeed() { DATA = SEED.map(normalize); await this.persist(); return DATA; },
-  async listPlano() { return (typeof SEED_PLANO !== 'undefined' ? SEED_PLANO : []).map(normalizePlano); },
+  async listPlano() { try { const r = localStorage.getItem(KEY + '_plano'); if (r) return JSON.parse(r).map(normalizePlano); } catch (e) {} return (typeof SEED_PLANO !== 'undefined' ? SEED_PLANO : []).map(normalizePlano); },
+  async savePlano(list) { PLANO = list.map(normalizePlano); try { localStorage.setItem(KEY + '_plano', JSON.stringify(PLANO)); } catch (e) {} return PLANO; },
   async persist() { try { localStorage.setItem(KEY, JSON.stringify(DATA)); } catch (e) {} }
 };
 
@@ -103,6 +104,7 @@ const sheetStore = {
   async replaceAll(list) { await callSheet('replaceAll', { demandas: list }); return (await callSheet('list')).map(normalize); },
   async resetSeed() { throw new Error('Reiniciar não está disponível no modo conectado.'); },
   async listPlano() { return (await callSheet('listPlano')).map(normalizePlano); },
+  async savePlano(list) { await callSheet('replacePlano', { plano: list }); return (await callSheet('listPlano')).map(normalizePlano); },
   async persist() {}   // a planilha já gravou
 };
 
@@ -313,8 +315,10 @@ function planoCard(p){
   const nd = p.demandas.length;
   const unico = nd>1 ? `<span class="prod-unico">Produto único · reúne ${nd} demandas</span>` : '';
   const dem = p.demandas.map(x=>`<li>${esc(x)}</li>`).join('');
+  const idx = PLANO.indexOf(p);
+  const acts = CAN_EDIT() ? `<div class="card-actions pcard-actions"><button class="iconbtn" title="Editar" data-pact="edit" data-idx="${idx}">✎</button><button class="iconbtn del" title="Excluir" data-pact="del" data-idx="${idx}">🗑</button></div>` : '';
   return `<article class="pcard${isSep?' sep':''}">
-    <div class="pcard-head"><h3>${esc(p.produto)}</h3><span class="prazochip" data-prazo="${prazoKind(p.prazo)}">${esc(p.prazo)}</span></div>
+    <div class="pcard-head"><h3>${esc(p.produto)}</h3><span class="prazochip" data-prazo="${prazoKind(p.prazo)}">${esc(p.prazo)}</span>${acts}</div>
     ${unico?`<div class="pcard-tagline">${unico}</div>`:''}
     <ul class="pcard-dem">${dem}</ul>
     <div class="pcard-meta">
@@ -349,6 +353,54 @@ function renderPlano() {
       <div class="horizon-body">${inHz.map(planoCard).join('')}</div></section>`;
   });
   host.innerHTML = html || '<div class="empty">A aba \u201cplano\u201d ainda não tem produtos. Rode o setupPlano no Apps Script, ou verifique a conexão.</div>';
+
+  const addbar = el('planoAddBar');
+  if (addbar) addbar.style.display = CAN_EDIT() ? '' : 'none';
+
+  host.querySelectorAll('[data-pact=edit]').forEach(b => b.addEventListener('click', () => openPlanoEdit(+b.dataset.idx)));
+  host.querySelectorAll('[data-pact=del]').forEach(b => b.addEventListener('click', () => removePlano(+b.dataset.idx)));
+}
+
+/* ---------- edição do plano (produtos) ---------- */
+let editingPlano = null;
+function openPlanoEdit(idx) {
+  if (!CAN_EDIT()) return;
+  editingPlano = (idx != null && idx >= 0) ? PLANO[idx] : null;
+  el('pTitle').textContent = editingPlano ? 'Editar produto do plano' : 'Novo produto do plano';
+  el('pDelete').style.display = editingPlano ? 'inline-block' : 'none';
+  el('pPrazo').innerHTML = (typeof PRAZOS !== 'undefined' ? PRAZOS : ['Curto prazo','Médio prazo','Longo prazo','A definir']).map(x => `<option>${esc(x)}</option>`).join('');
+  const g = editingPlano || { produto:'', prazo:'A definir', prioridade:'', complexidade:'', demandas:[], fonte:'', observacao:'', ordem:(PLANO.reduce((m,p)=>Math.max(m,p.ordem||0),0)+1) };
+  el('pProduto').value = g.produto; el('pPrazo').value = g.prazo; el('pPrio').value = g.prioridade;
+  el('pComp').value = g.complexidade; el('pDem').value = (g.demandas||[]).join('\n');
+  el('pFonte').value = g.fonte; el('pObs').value = g.observacao; el('pOrdem').value = g.ordem || 0;
+  el('planoBack').classList.add('open'); setTimeout(() => el('pProduto').focus(), 30);
+}
+function closePlanoEdit() { el('planoBack').classList.remove('open'); editingPlano = null; }
+async function savePlanoEdit() {
+  const g = {
+    ordem: Number(el('pOrdem').value) || 0,
+    produto: el('pProduto').value.trim() || '(sem nome)',
+    prazo: el('pPrazo').value,
+    prioridade: el('pPrio').value.trim(),
+    complexidade: el('pComp').value.trim(),
+    demandas: el('pDem').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean),
+    fonte: el('pFonte').value.trim(),
+    observacao: el('pObs').value.trim()
+  };
+  if (editingPlano) Object.assign(editingPlano, g); else PLANO.push(normalizePlano(g));
+  try {
+    PLANO = await store.savePlano(PLANO.map(x => x));
+    toast('Plano salvo');
+  } catch (err) { toast('Não foi possível salvar o plano. ' + err.message, true); }
+  closePlanoEdit(); renderPlano();
+}
+async function removePlano(idx) {
+  const p = PLANO[idx]; if (!p) return;
+  if (!confirm('Excluir o produto “' + p.produto + '” do plano?')) return;
+  PLANO = PLANO.filter((_, i) => i !== idx);
+  try { PLANO = await store.savePlano(PLANO.map(x => x)); toast('Excluído'); }
+  catch (err) { toast('Não foi possível salvar o plano. ' + err.message, true); }
+  renderPlano();
 }
 
 function go(s) {
@@ -547,6 +599,11 @@ el('afprio').addEventListener('change', e => { FA.prio = e.target.value; renderD
 el('addBtn').addEventListener('click', () => openEdit(null));
 el('mSave').addEventListener('click', saveEdit);
 el('mCancel').addEventListener('click', closeEdit);
+el('planoAddBtn').addEventListener('click', () => openPlanoEdit(null));
+el('pSave').addEventListener('click', savePlanoEdit);
+el('pCancel').addEventListener('click', closePlanoEdit);
+el('pDelete').addEventListener('click', () => { if (editingPlano) { const i = PLANO.indexOf(editingPlano); closePlanoEdit(); removePlano(i); } });
+el('planoBack').addEventListener('click', e => { if (e.target.id === 'planoBack') closePlanoEdit(); });
 el('mDelete').addEventListener('click', () => { if (editing) { const id = editing.id; closeEdit(); removeCard(id); } });
 el('backdrop').addEventListener('click', e => { if (e.target.id === 'backdrop') closeEdit(); });
 /* status e % andam juntos nos dois sentidos */

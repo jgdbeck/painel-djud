@@ -99,6 +99,7 @@
     <h1>Plano de Trabalho</h1>
     <p>Demandas de dados do DJUD · agrupadas em produtos e organizadas por prazo</p>
   </div>
+  <div id="planoAddBar" style="display:none;margin:0 2px 14px"><button class="btn btn-primary" id="planoAddBtn">＋ Adicionar produto</button></div>
   <div class="legend" style="margin-bottom:14px">
     <span class="k">Plano organizado por <b>faixa de prazo</b> — dentro de cada faixa, as demandas aparecem agrupadas em <b>produtos</b> (várias demandas → uma entrega). Prazo por prioridade × complexidade: prioridade alta + baixa complexidade = curto prazo. A faixa <b>A definir</b> reúne os casos indefinidos (inclui a extração de documentos do SEI).</span>
   </div>
@@ -142,6 +143,26 @@
   </div>
 </div>
 <div class="savednote" id="savednote">Salvo</div>
+
+<!-- modal editar PRODUTO do plano -->
+<div class="backdrop" id="planoBack">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+    <div class="modal-head"><h3 id="pTitle">Editar produto do plano</h3></div>
+    <div class="modal-body">
+      <div><label class="f" for="pProduto">Produto</label><input id="pProduto" class="finput"></div>
+      <div class="row3">
+        <div><label class="f" for="pPrazo">Prazo</label><select id="pPrazo" class="fselect"></select></div>
+        <div><label class="f" for="pPrio">Prioridade</label><input id="pPrio" class="finput" placeholder="ex.: 1 e 2"></div>
+        <div><label class="f" for="pComp">Complexidade</label><input id="pComp" class="finput" placeholder="ex.: Baixa a Média"></div>
+      </div>
+      <div><label class="f" for="pDem">Demandas reunidas (uma por linha)</label><textarea id="pDem" class="ftext" style="min-height:100px"></textarea></div>
+      <div><label class="f" for="pFonte">Fonte / acesso</label><input id="pFonte" class="finput"></div>
+      <div><label class="f" for="pObs">Observação</label><textarea id="pObs" class="ftext"></textarea></div>
+      <div class="row2"><div><label class="f" for="pOrdem">Ordem (posição na lista)</label><input id="pOrdem" class="finput" type="number" min="0" step="1"></div><div></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn-del" id="pDelete">Excluir</button><div class="spacer"></div><button class="btn-ghost" id="pCancel">Cancelar</button><button class="btn-save" id="pSave">Salvar</button></div>
+  </div>
+</div>
 
 <script src="config.js"></script>
 <script src="data.js"></script>
