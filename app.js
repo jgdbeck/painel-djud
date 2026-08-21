@@ -310,35 +310,17 @@ function renderDash() {
 /* ---------- plano de trabalho (aba plano: 1 linha por produto, estilo PDF) ---------- */
 function prazoKind(p){ return (typeof PRAZO_KIND!=='undefined' && PRAZO_KIND[p]) || 'adef'; }
 
-function iconFor(txt){
-  const t = (txt || '').toLowerCase();
-  const map = [
-    [/preç|cmed|pmvg|mercado|custo|orçament|siafi|ploa|financ|ressarc|depósit|dinheiro|r\$/,'💰'],
-    [/estoque|sismat|remanejamento|logíst|incinera|troca|abastec|desabastec/,'📦'],
-    [/compra|dfd|ata|pncp|licit|414|fracasso/,'🛒'],
-    [/prazo|tempo|data|vencimento|reabertura|alerta|criticidade|urg/,'⏰'],
-    [/painel|gráfic|dashboard|monitor|ranking|indicador|relatório|quinzenal/,'📊'],
-    [/óbito|paciente|receita federal|cpf|sim\b/,'🪪'],
-    [/intima|processo|tramita|sei|redmine|cnj|judicial|eproc|sapiens/,'⚖️'],
-    [/nota técnica|lai|resposta|repositório|documento|histórico/,'📄'],
-    [/farmacêut|produção|assessor|equipe|coordena/,'👥'],
-    [/import|base|planilha|integra|pipeline|dicionário|governança/,'🗄️'],
-    [/regra|cálculo|tema 234|projeção|previsão|modelo/,'🧮'],
-  ];
-  for (const [re, ic] of map) if (re.test(t)) return ic;
-  return '•';
-}
-
 function planoCard(p){
   const isSep = /SEI \(separado\)/.test(p.produto) || /Extração de documentos/.test(p.produto);
   const nd = p.demandas.length;
   const unico = nd>1 ? `<span class="prod-unico">Produto único · reúne ${nd} demandas</span>` : '';
-  const dem = p.demandas.map(x=>`<li><span class="dem-ic">${iconFor(x)}</span><span class="dem-tx">${esc(x)}</span></li>`).join('');
+  const dem = p.demandas.map(x=>`<li>${esc(x)}</li>`).join('');
   const idx = PLANO.indexOf(p);
   const acts = CAN_EDIT() ? `<div class="card-actions pcard-actions"><button class="iconbtn" title="Editar" data-pact="edit" data-idx="${idx}">✎</button><button class="iconbtn del" title="Excluir" data-pact="del" data-idx="${idx}">🗑</button></div>` : '';
   return `<article class="pcard${isSep?' sep':''}">
     <div class="pcard-head"><h3>${esc(p.produto)}</h3><span class="prazochip" data-prazo="${prazoKind(p.prazo)}">${esc(p.prazo)}</span>${acts}</div>
     ${unico?`<div class="pcard-tagline">${unico}</div>`:''}
+    <div class="dem-label"><span class="dem-label-ic">🎯</span> Iniciativas</div>
     <ul class="pcard-dem">${dem}</ul>
     <div class="pcard-meta">
       <div><span class="ml">Fonte / acesso</span><span class="mv">${esc(p.fonte||'—')}</span></div>

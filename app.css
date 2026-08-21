@@ -209,11 +209,13 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .pcard-head h3{font-size:14px;font-weight:750;color:var(--ink);line-height:1.28;flex:1;letter-spacing:-.01em}
 .pcard.sep .pcard-head h3{color:#B23A34}
 .pcard-tagline{margin-top:8px}
-.pcard-dem{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:7px}
-.pcard-dem li{display:flex;align-items:flex-start;gap:9px;background:var(--page);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:12.8px;line-height:1.4;color:var(--ink);font-weight:500}
-.pcard-dem li .dem-ic{flex:0 0 auto;width:22px;height:22px;border-radius:7px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:12.5px;line-height:1}
-.pcard-dem li .dem-tx{flex:1}
-.pcard.sep .pcard-dem li{background:#FCF4F3;border-color:#EFC7C2}
+.dem-label{display:flex;align-items:center;gap:7px;margin:13px 0 7px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+.dem-label .dem-label-ic{font-size:13px;line-height:1}
+.pcard-dem{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.pcard-dem li{display:flex;align-items:flex-start;gap:8px;font-size:12.8px;line-height:1.4;color:var(--ink-soft)}
+.pcard-dem li:before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--exec);margin-top:6px}
+.pcard.sep .dem-label{color:#B23A34}
+.pcard.sep .pcard-dem li:before{background:#B23A34}
 .pcard-meta{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);display:grid;gap:7px}
 .pcard-meta .ml{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
 .pcard-meta .mv{display:block;font-size:12px;color:var(--ink-soft);margin-top:1px}
