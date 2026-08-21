@@ -320,7 +320,7 @@ function planoCard(p){
   return `<article class="pcard${isSep?' sep':''}">
     <div class="pcard-head"><h3>${esc(p.produto)}</h3><span class="prazochip" data-prazo="${prazoKind(p.prazo)}">${esc(p.prazo)}</span>${acts}</div>
     ${unico?`<div class="pcard-tagline">${unico}</div>`:''}
-    <div class="dem-label"><span class="dem-label-ic">🎯</span> Iniciativas</div>
+    <div class="dem-label"><svg class="dem-label-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11"/><path d="M9 12h11"/><path d="M9 18h11"/><path d="M4 6l1 1 2-2"/><path d="M4 12l1 1 2-2"/><path d="M4 18l1 1 2-2"/></svg>Iniciativas</div>
     <ul class="pcard-dem">${dem}</ul>
     <div class="pcard-meta">
       <div><span class="ml">Fonte / acesso</span><span class="mv">${esc(p.fonte||'—')}</span></div>
