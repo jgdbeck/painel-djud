@@ -5,7 +5,7 @@ const KEY = 'djud_demandas_v3';   // dados do modo demonstração
 const PASSKEY = 'djud_pass';      // senha de edição do modo conectado
 const LIVE = !!CONFIG.SHEET_API;
 
-let DATA = [], screen = 'home', view = 'coord', dragId = null, editing = null;
+let DATA = [], PLANO = [], screen = 'home', view = 'coord', dragId = null, editing = null;
 let auth = { authed: false, pass: null };
 const CAN_EDIT = () => !LIVE || auth.authed;
 
@@ -35,6 +35,17 @@ function normalize(c, i) {
   return d;
 }
 
+function normalizePlano(p) {
+  const d = Object.assign({ ordem: 0, produto: '', prazo: 'A definir', prioridade: '', complexidade: '', demandas: [], fonte: '', observacao: '' }, p);
+  // a planilha devolve "demandas" como texto (linhas separadas por \n); o demo já vem como array
+  if (typeof d.demandas === 'string') d.demandas = d.demandas.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if (!Array.isArray(d.demandas)) d.demandas = [];
+  d.ordem = Number(d.ordem) || 0;
+  (typeof PRAZOS !== 'undefined') && (d.prazo = PRAZOS.includes(d.prazo) ? d.prazo : 'A definir');
+  ['produto', 'prioridade', 'complexidade', 'fonte', 'observacao'].forEach(k => d[k] = d[k] == null ? '' : String(d[k]));
+  return d;
+}
+
 /* ---------- STORE ----------
    Contrato dos dois modos: o store fala com o armazenamento e devolve o objeto
    canônico; quem chama é que altera DATA e depois chama persist(). */
@@ -49,6 +60,7 @@ const localStore = {
   async remove(id) {},
   async replaceAll(list) { DATA = list; await this.persist(); return DATA; },
   async resetSeed() { DATA = SEED.map(normalize); await this.persist(); return DATA; },
+  async listPlano() { return (typeof SEED_PLANO !== 'undefined' ? SEED_PLANO : []).map(normalizePlano); },
   async persist() { try { localStorage.setItem(KEY, JSON.stringify(DATA)); } catch (e) {} }
 };
 
@@ -58,8 +70,8 @@ const localStore = {
 async function callSheet(action, payload) {
   let r;
   try {
-    if (action === 'list') {
-      r = await fetch(CONFIG.SHEET_API + '?action=list');
+    if (action === 'list' || action === 'listPlano') {
+      r = await fetch(CONFIG.SHEET_API + '?action=' + action);
     } else {
       r = await fetch(CONFIG.SHEET_API, {
         method: 'POST',
@@ -90,6 +102,7 @@ const sheetStore = {
   async remove(id) { await callSheet('delete', { id }); },
   async replaceAll(list) { await callSheet('replaceAll', { demandas: list }); return (await callSheet('list')).map(normalize); },
   async resetSeed() { throw new Error('Reiniciar não está disponível no modo conectado.'); },
+  async listPlano() { return (await callSheet('listPlano')).map(normalizePlano); },
   async persist() {}   // a planilha já gravou
 };
 
@@ -292,20 +305,40 @@ function renderDash() {
 }
 
 /* ---------- navegação ---------- */
-/* ---------- plano de trabalho (faixas por prazo, produtos dentro) ---------- */
+/* ---------- plano de trabalho (aba plano: 1 linha por produto, estilo PDF) ---------- */
+function prazoKind(p){ return (typeof PRAZO_KIND!=='undefined' && PRAZO_KIND[p]) || 'adef'; }
+
+function planoCard(p){
+  const isSep = /SEI \(separado\)/.test(p.produto) || /Extração de documentos/.test(p.produto);
+  const nd = p.demandas.length;
+  const unico = nd>1 ? `<span class="prod-unico">Produto único · reúne ${nd} demandas</span>` : '';
+  const dem = p.demandas.map(x=>`<li>${esc(x)}</li>`).join('');
+  return `<article class="pcard${isSep?' sep':''}">
+    <div class="pcard-head"><h3>${esc(p.produto)}</h3><span class="prazochip" data-prazo="${prazoKind(p.prazo)}">${esc(p.prazo)}</span></div>
+    ${unico?`<div class="pcard-tagline">${unico}</div>`:''}
+    <ul class="pcard-dem">${dem}</ul>
+    <div class="pcard-meta">
+      <div><span class="ml">Fonte / acesso</span><span class="mv">${esc(p.fonte||'—')}</span></div>
+      <div><span class="ml">Prioridade</span><span class="mv b">${esc(p.prioridade||'—')}</span></div>
+      <div><span class="ml">Complexidade</span><span class="mv b">${esc(p.complexidade||'—')}</span></div>
+    </div>
+    ${p.observacao?`<div class="pcard-obs"><b>Observação:</b> ${esc(p.observacao)}</div>`:''}
+  </article>`;
+}
+
 function renderPlano() {
   const host = el('planoArea');
+  if (LIVE && !PLANO.length) { host.innerHTML = '<div class="loading">Carregando o plano da planilha, aguarde…</div>'; }
   const HZ = [
-    { prazo: 'Curto prazo', kind: 'curto', desc: 'Prioridade alta e baixa complexidade, ou dado já disponível. Primeiras entregas.' },
-    { prazo: 'Médio prazo', kind: 'medio', desc: 'Depende de liberar um acesso (execução rápida depois) ou de consolidar uma base.' },
-    { prazo: 'Longo prazo', kind: 'longo', desc: 'Depende de bases consolidadas ou de regras ainda a definir.' },
-    { prazo: 'A definir', kind: 'adef', desc: 'Casos indefinidos — inclui o que depende da extração de documentos do SEI e acessos em articulação.' }
+    { prazo:'Curto prazo', kind:'curto', desc:'Prioridade alta e baixa complexidade, ou dado já disponível. Primeiras entregas.' },
+    { prazo:'Médio prazo', kind:'medio', desc:'Depende de liberar um acesso (execução rápida depois) ou de consolidar uma base.' },
+    { prazo:'Longo prazo', kind:'longo', desc:'Depende de bases consolidadas ou de regras ainda a definir.' },
+    { prazo:'A definir', kind:'adef', desc:'Casos indefinidos — inclui o que depende da extração de documentos do SEI e acessos em articulação.' }
   ];
-  const ordemProd = (typeof PRODUTOS !== 'undefined' ? PRODUTOS : []);
-  const SEP = 'Extração de documentos do SEI (separado)';
+  const ord = PLANO.slice().sort((a,b)=> (a.ordem||0)-(b.ordem||0));
   let html = '';
   HZ.forEach(h => {
-    const inHz = DATA.filter(c => (c.prazo || 'A definir') === h.prazo);
+    const inHz = ord.filter(p => (p.prazo||'A definir') === h.prazo);
     if (!inHz.length) return;
     html += `<section class="horizon">
       <div class="horizon-head" data-prazo="${h.kind}">
@@ -313,33 +346,9 @@ function renderPlano() {
         <span class="hz-desc">${esc(h.desc)}</span>
         <span class="hz-count">${inHz.length}</span>
       </div>
-      <div class="horizon-body" id="hz_${h.kind}"></div></section>`;
+      <div class="horizon-body">${inHz.map(planoCard).join('')}</div></section>`;
   });
-  host.innerHTML = html || '<div class="empty">Nenhuma demanda no plano.</div>';
-
-  HZ.forEach(h => {
-    const body = el('hz_' + h.kind); if (!body) return;
-    const inHz = DATA.filter(c => (c.prazo || 'A definir') === h.prazo);
-    const prods = ordemProd.filter(p => inHz.some(c => c.produto === p));
-    const semProd = inHz.filter(c => !c.produto || !ordemProd.includes(c.produto));
-    prods.forEach(prod => {
-      const cs = sortCards(inHz.filter(c => c.produto === prod), 'coord');
-      const unico = cs.length > 1 ? `<span class="prod-unico">Produto único · ${cs.length} demandas</span>` : '';
-      const isSep = prod === SEP;
-      const sub = document.createElement('div'); sub.className = 'prod-sub';
-      sub.innerHTML = `<div class="prod-sub-head${isSep ? ' sep' : ''}"><h3>${esc(prod)}</h3><span class="count">${cs.length}</span>${unico}</div><div class="grid"></div>`;
-      const grid = sub.querySelector('.grid');
-      cs.forEach(c => grid.appendChild(cardEl(c)));
-      body.appendChild(sub);
-    });
-    if (semProd.length) {
-      const sub = document.createElement('div'); sub.className = 'prod-sub';
-      sub.innerHTML = `<div class="prod-sub-head"><h3>Sem produto definido</h3><span class="count">${semProd.length}</span></div><div class="grid"></div>`;
-      const grid = sub.querySelector('.grid');
-      sortCards(semProd, 'coord').forEach(c => grid.appendChild(cardEl(c)));
-      body.appendChild(sub);
-    }
-  });
+  host.innerHTML = html || '<div class="empty">A aba \u201cplano\u201d ainda não tem produtos. Rode o setupPlano no Apps Script, ou verifique a conexão.</div>';
 }
 
 function go(s) {
@@ -519,6 +528,7 @@ async function boot() {
     DATA = [];
     toast('Não foi possível carregar as demandas. ' + err.message, true);
   }
+  try { PLANO = await store.listPlano(); } catch (err) { PLANO = []; }
   updateWho();
   refreshCurrent();
 }
