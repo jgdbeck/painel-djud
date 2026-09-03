@@ -419,15 +419,12 @@ const METAS = [
 ];
 let ISSUES = null, issuesLoading = false;
 const RF = { meta: '', q: '' };
-/* GitHub só tem 2 estados nativos (aberta/fechada) — a 3ª coluna vem de uma
-   label própria: presença de "Em andamento" numa issue aberta a tira do
-   Backlog. Fechar a issue no GitHub é o que a move para Concluída. */
-const RCOLS = [
-  { key: 'backlog', label: 'Backlog' },
-  { key: 'andamento', label: 'Em andamento' },
-  { key: 'concluida', label: 'Concluída' }
-];
-const ghColumn = iss => iss.state === 'closed' ? 'concluida' : (ghHasLabel(iss.labels, 'Em andamento') ? 'andamento' : 'backlog');
+/* As colunas espelham o campo "Status" do Project do GitHub (5 opções).
+   A API pública de issues não enxerga esse campo (exige login), então o
+   workflow .github/workflows/sync-project-status.yml lê o Project e
+   grava o status como label na issue — é essa label que a coluna usa. */
+const RCOLS = ['Backlog', 'Parado', 'Em andamento', 'Finalizado', 'Registrado no relatório'].map(label => ({ key: label, label }));
+const ghColumn = iss => (iss.labels || []).find(x => RCOLS.some(c => c.key === x.name))?.name || 'Backlog';
 
 async function fetchIssues() {
   const repo = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '';
@@ -501,7 +498,7 @@ async function renderRoadmap() {
   }
   if (issuesLoading) return;
   const items = filteredIssues();
-  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Coluna = estado da issue no GitHub (fechada → Concluída) + label “Em andamento” · clique em “Atualizar” para recarregar</span>`;
+  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Coluna espelha o Status do Project (sincroniza a cada ~20min) · clique em “Atualizar” para recarregar</span>`;
   area.innerHTML = '';
   if (!items.length) { area.innerHTML = '<div class="empty">Nenhuma issue encontrada com esse filtro.</div>'; return; }
   const wrap = document.createElement('div');

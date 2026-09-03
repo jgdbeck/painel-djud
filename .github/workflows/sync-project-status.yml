@@ -1,0 +1,87 @@
+name: Sincronizar status do Project nas labels
+
+# O painel (Roadmap) lê issues pela API pública, que não enxerga o campo
+# "Status" do Project (isso exige login). Este workflow é a ponte: lê o
+# Project via GraphQL (precisa do PROJECT_PAT, com permissão de conta
+# "Projects: Read-only" + permissão de repositório "Issues: Read and write")
+# e espelha o Status de cada item numa label da issue correspondente —
+# a mesma label que o Roadmap usa pra decidir a coluna.
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler o Project e ajustar as labels de status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const OWNER = 'jgdbeck';
+            const REPO = 'painel-djud';
+            const PROJECT_NUMBER = 1;
+            // Precisa bater exatamente com os nomes das colunas do Project.
+            const STATUS_LABELS = ['Backlog', 'Parado', 'Em andamento', 'Finalizado', 'Registrado no relatório'];
+
+            async function fetchItems() {
+              let items = [];
+              let cursor = null;
+              for (;;) {
+                const res = await github.graphql(
+                  `query($login:String!, $number:Int!, $cursor:String) {
+                    user(login:$login) {
+                      projectV2(number:$number) {
+                        items(first:100, after:$cursor) {
+                          pageInfo { hasNextPage endCursor }
+                          nodes {
+                            status: fieldValueByName(name:"Status") {
+                              ... on ProjectV2ItemFieldSingleSelectValue { name }
+                            }
+                            content {
+                              __typename
+                              ... on Issue {
+                                number
+                                labels(first:50) { nodes { name } }
+                                repository { name owner { login } }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }`,
+                  { login: OWNER, number: PROJECT_NUMBER, cursor }
+                );
+                const conn = res.user.projectV2.items;
+                items = items.concat(conn.nodes);
+                if (!conn.pageInfo.hasNextPage) break;
+                cursor = conn.pageInfo.endCursor;
+              }
+              return items;
+            }
+
+            const items = await fetchItems();
+            let changed = 0;
+            for (const item of items) {
+              const c = item.content;
+              if (!c || c.__typename !== 'Issue') continue;
+              if (c.repository.owner.login !== OWNER || c.repository.name !== REPO) continue;
+
+              const desired = (item.status && STATUS_LABELS.includes(item.status.name)) ? item.status.name : 'Backlog';
+              const current = c.labels.nodes.map(l => l.name);
+
+              for (const name of current.filter(n => STATUS_LABELS.includes(n) && n !== desired)) {
+                try {
+                  await github.rest.issues.removeLabel({ owner: OWNER, repo: REPO, issue_number: c.number, name });
+                  changed++;
+                } catch (e) { core.warning(`remover "${name}" da #${c.number}: ${e.message}`); }
+              }
+              if (!current.includes(desired)) {
+                await github.rest.issues.addLabels({ owner: OWNER, repo: REPO, issue_number: c.number, labels: [desired] });
+                changed++;
+              }
+            }
+            core.info(`${items.length} itens do Project lidos, ${changed} ajuste(s) de label aplicado(s).`);
