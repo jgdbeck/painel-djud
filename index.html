@@ -15,6 +15,7 @@
       <button data-screen="demandas" aria-current="false">Demandas</button>
       <button data-screen="acomp" aria-current="false">Acompanhamento</button>
       <button data-screen="plano" aria-current="false">Plano</button>
+      <button data-screen="roadmap" aria-current="false">Roadmap</button>
     </nav>
     <div class="spacer"></div>
     <span class="modebadge mode-demo" id="modeBadge">Modo demonstração</span>
@@ -104,6 +105,28 @@
     <span class="k">Plano organizado por <b>faixa de prazo</b> — dentro de cada faixa, as demandas aparecem agrupadas em <b>produtos</b> (várias demandas → uma entrega). Prazo por prioridade × complexidade: prioridade alta + baixa complexidade = curto prazo. A faixa <b>A definir</b> reúne os casos indefinidos (inclui a extração de documentos do SEI).</span>
   </div>
   <div id="planoArea"></div>
+</main>
+
+<!-- ROADMAP (issues do GitHub) -->
+<main class="wrap hidden" id="scr-roadmap">
+  <div class="plano-title">
+    <h1>Roadmap</h1>
+    <p>Issues do repositório <b id="roadmapRepo"></b> · prioridade e complexidade lidas das labels de cada issue</p>
+  </div>
+  <div class="controls">
+    <select id="rfmeta" class="select" aria-label="Filtrar por meta"></select>
+    <select id="rfstate" class="select" aria-label="Filtrar por situação">
+      <option value="open">Abertas</option>
+      <option value="all">Todas</option>
+      <option value="closed">Fechadas</option>
+    </select>
+    <input id="rq" class="input" type="search" placeholder="Buscar issue…" style="width:200px">
+    <div class="spacer"></div>
+    <button class="btn" id="rRefreshBtn">↻ Atualizar</button>
+    <a class="btn" id="rGhLink" href="#" target="_blank" rel="noopener">Abrir no GitHub ↗</a>
+  </div>
+  <div class="legend" id="roadmapLegend"></div>
+  <div id="roadmapArea"></div>
 </main>
 
 <!-- modal editar -->

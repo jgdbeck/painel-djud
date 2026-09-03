@@ -404,6 +404,109 @@ async function removePlano(idx) {
   renderPlano();
 }
 
+/* ---------- roadmap (issues do GitHub) ----------
+   Lê as issues públicas do repositório configurado em CONFIG.GITHUB_REPO,
+   direto da API do GitHub (sem senha — exige o repositório público).
+   Meta/Prioridade/Complexidade/Condicional vêm das labels de cada issue,
+   não de data.js: são taxonomia do roadmap de desenvolvimento, não do
+   modelo de demandas do painel. */
+const METAS = [
+  'Meta 1: Estruturação e governança de dados',
+  'Meta 2: Analytics descritivo (painéis)',
+  'Meta 3: Alertas e automações',
+  'Meta 4: Repositórios e produtos de apoio',
+  'Meta 5: Analytics avançado e condicionais'
+];
+let ISSUES = null, issuesLoading = false;
+const RF = { meta: '', state: 'open', q: '' };
+
+async function fetchIssues() {
+  const repo = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '';
+  if (!repo) throw new Error('Configure CONFIG.GITHUB_REPO em config.js.');
+  let r;
+  try { r = await fetch(`https://api.github.com/repos/${repo}/issues?state=all&per_page=100`, { headers: { Accept: 'application/vnd.github+json' } }); }
+  catch (e) { throw new Error('Não foi possível falar com o GitHub. Verifique a conexão.'); }
+  if (!r.ok) throw new Error('Não foi possível carregar as issues (HTTP ' + r.status + '). O repositório precisa ser público.');
+  const list = await r.json();
+  return list.filter(i => !i.pull_request);   // a API de issues também devolve pull requests
+}
+
+const ghMeta = labels => ((labels || []).find(x => /^Meta \d/.test(x.name)) || {}).name || 'Sem meta';
+const ghHasLabel = (labels, name) => (labels || []).some(x => x.name === name);
+const ghValues = (labels, prefix) => (labels || []).filter(x => x.name.indexOf(prefix) === 0).map(x => x.name.slice(prefix.length).trim());
+function ghDesc(body) {
+  if (!body) return '';
+  const m = /##\s*Descri[cç][aã]o\s*\n+([\s\S]*?)(\n##|$)/i.exec(body);
+  return (m ? m[1] : body).trim().slice(0, 320);
+}
+
+function fillRoadmapSelect() {
+  el('rfmeta').innerHTML = '<option value="">Meta: todas</option>' + METAS.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  el('roadmapRepo').textContent = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '(não configurado)';
+  el('rGhLink').href = `https://github.com/${(typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || ''}/issues`;
+}
+
+function filteredIssues() {
+  if (!ISSUES) return [];
+  return ISSUES.filter(iss => {
+    if (RF.state !== 'all' && iss.state !== RF.state) return false;
+    if (RF.meta && ghMeta(iss.labels) !== RF.meta) return false;
+    if (RF.q) { const t = (iss.title + ' ' + (iss.body || '')).toLowerCase(); if (!t.includes(RF.q.toLowerCase())) return false; }
+    return true;
+  });
+}
+
+function issueCard(iss) {
+  const cond = ghHasLabel(iss.labels, 'Condicional (acesso/SEI)');
+  const estrut = ghHasLabel(iss.labels, 'Estrutural (sem prioridade)');
+  const prios = ghValues(iss.labels, 'Prioridade ');
+  const comps = ghValues(iss.labels, 'Complexidade ');
+  const prioText = estrut ? 'Estrutural' : (prios.length ? prios.join(' e ') : '—');
+  const compText = comps.length ? comps.join(' e ') : '—';
+  const desc = ghDesc(iss.body);
+  const node = document.createElement('article');
+  node.className = 'pcard gh-card' + (cond ? ' sep' : '');
+  node.innerHTML = `
+    <div class="pcard-head">
+      <h3><a href="${esc(iss.html_url)}" target="_blank" rel="noopener">${esc(iss.title)}</a></h3>
+      <span class="stbadge" data-ghstate="${esc(iss.state)}">${iss.state === 'open' ? 'Aberta' : 'Fechada'}</span>
+    </div>
+    ${desc ? `<p class="prod-note">${esc(desc)}</p>` : ''}
+    ${cond ? `<div class="pcard-tagline"><span class="card-warn">Condicional — acesso/SEI</span></div>` : ''}
+    <div class="pcard-meta">
+      <div><span class="ml">Prioridade</span><span class="mv b">${esc(prioText)}</span></div>
+      <div><span class="ml">Complexidade</span><span class="mv b">${esc(compText)}</span></div>
+      <div><span class="ml">Issue</span><span class="mv">#${iss.number}</span></div>
+    </div>`;
+  return node;
+}
+
+async function renderRoadmap() {
+  const area = el('roadmapArea');
+  if (!ISSUES && !issuesLoading) {
+    issuesLoading = true;
+    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    try { ISSUES = await fetchIssues(); }
+    catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
+    issuesLoading = false;
+    if (screen !== 'roadmap') return;   // usuário já saiu da aba enquanto carregava
+  }
+  if (issuesLoading) return;
+  const items = filteredIssues();
+  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Dados vêm do GitHub — clique em “Atualizar” para recarregar</span>`;
+  area.innerHTML = '';
+  METAS.concat(['Sem meta']).forEach(meta => {
+    const list = filteredIssues().filter(iss => ghMeta(iss.labels) === meta).sort((a, b) => a.number - b.number);
+    if (!list.length) return;
+    const sec = document.createElement('section');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-head"><h2>${esc(meta)}</h2><span class="count">${list.length}</span></div><div class="horizon-body"></div>`;
+    sec.querySelector('.horizon-body').append(...list.map(issueCard));
+    area.appendChild(sec);
+  });
+  if (!items.length) area.innerHTML = '<div class="empty">Nenhuma issue encontrada com esse filtro.</div>';
+}
+
 function go(s) {
   screen = s;
   document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.screen === s));
@@ -411,12 +514,14 @@ function go(s) {
   el('scr-demandas').classList.toggle('hidden', s !== 'demandas');
   el('scr-acomp').classList.toggle('hidden', s !== 'acomp');
   el('scr-plano').classList.toggle('hidden', s !== 'plano');
+  el('scr-roadmap').classList.toggle('hidden', s !== 'roadmap');
   refreshCurrent();
 }
 function refreshCurrent() {
   if (screen === 'demandas') renderBoard();
   else if (screen === 'acomp') renderDash();
   else if (screen === 'plano') renderPlano();
+  else if (screen === 'roadmap') renderRoadmap();
   else renderHomeSummary();
 }
 
@@ -628,6 +733,10 @@ el('resetBtn').addEventListener('click', async () => {
   try { DATA = await store.resetSeed(); refreshCurrent(); toast('Reiniciado'); }
   catch (err) { handleErr(err); }
 });
+el('rfmeta').addEventListener('change', e => { RF.meta = e.target.value; renderRoadmap(); });
+el('rfstate').addEventListener('change', e => { RF.state = e.target.value; renderRoadmap(); });
+el('rq').addEventListener('input', e => { RF.q = e.target.value; renderRoadmap(); });
+el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap(); });
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
@@ -641,6 +750,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeEdit(
 
 /* ---------- init ---------- */
 fillSelects();
+fillRoadmapSelect();
 if (LIVE) {
   try { const p = localStorage.getItem(PASSKEY); if (p) { auth.pass = p; auth.authed = true; } } catch (e) {}
 }
