@@ -418,7 +418,16 @@ const METAS = [
   'Meta 5: Analytics avançado e condicionais'
 ];
 let ISSUES = null, issuesLoading = false;
-const RF = { meta: '', state: 'open', q: '' };
+const RF = { meta: '', q: '' };
+/* GitHub só tem 2 estados nativos (aberta/fechada) — a 3ª coluna vem de uma
+   label própria: presença de "Em andamento" numa issue aberta a tira do
+   Backlog. Fechar a issue no GitHub é o que a move para Concluída. */
+const RCOLS = [
+  { key: 'backlog', label: 'Backlog' },
+  { key: 'andamento', label: 'Em andamento' },
+  { key: 'concluida', label: 'Concluída' }
+];
+const ghColumn = iss => iss.state === 'closed' ? 'concluida' : (ghHasLabel(iss.labels, 'Em andamento') ? 'andamento' : 'backlog');
 
 async function fetchIssues() {
   const repo = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '';
@@ -449,7 +458,6 @@ function fillRoadmapSelect() {
 function filteredIssues() {
   if (!ISSUES) return [];
   return ISSUES.filter(iss => {
-    if (RF.state !== 'all' && iss.state !== RF.state) return false;
     if (RF.meta && ghMeta(iss.labels) !== RF.meta) return false;
     if (RF.q) { const t = (iss.title + ' ' + (iss.body || '')).toLowerCase(); if (!t.includes(RF.q.toLowerCase())) return false; }
     return true;
@@ -493,18 +501,22 @@ async function renderRoadmap() {
   }
   if (issuesLoading) return;
   const items = filteredIssues();
-  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Dados vêm do GitHub — clique em “Atualizar” para recarregar</span>`;
+  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Coluna = estado da issue no GitHub (fechada → Concluída) + label “Em andamento” · clique em “Atualizar” para recarregar</span>`;
   area.innerHTML = '';
-  METAS.concat(['Sem meta']).forEach(meta => {
-    const list = filteredIssues().filter(iss => ghMeta(iss.labels) === meta).sort((a, b) => a.number - b.number);
-    if (!list.length) return;
-    const sec = document.createElement('section');
-    sec.className = 'section';
-    sec.innerHTML = `<div class="section-head"><h2>${esc(meta)}</h2><span class="count">${list.length}</span></div><div class="horizon-body"></div>`;
-    sec.querySelector('.horizon-body').append(...list.map(issueCard));
-    area.appendChild(sec);
+  if (!items.length) { area.innerHTML = '<div class="empty">Nenhuma issue encontrada com esse filtro.</div>'; return; }
+  const wrap = document.createElement('div');
+  wrap.className = 'cols';
+  RCOLS.forEach(col => {
+    const list = items.filter(iss => ghColumn(iss) === col.key).sort((a, b) => a.number - b.number);
+    const node = document.createElement('div');
+    node.className = 'col';
+    node.innerHTML = `<div class="col-head"><span class="lbl">${esc(col.label)}</span><span class="count">${list.length}</span></div><div class="grid"></div>`;
+    const grid = node.querySelector('.grid');
+    if (list.length) grid.append(...list.map(issueCard));
+    else grid.innerHTML = '<div class="empty">Nenhuma issue aqui</div>';
+    wrap.appendChild(node);
   });
-  if (!items.length) area.innerHTML = '<div class="empty">Nenhuma issue encontrada com esse filtro.</div>';
+  area.appendChild(wrap);
 }
 
 function go(s) {
@@ -734,7 +746,6 @@ el('resetBtn').addEventListener('click', async () => {
   catch (err) { handleErr(err); }
 });
 el('rfmeta').addEventListener('change', e => { RF.meta = e.target.value; renderRoadmap(); });
-el('rfstate').addEventListener('change', e => { RF.state = e.target.value; renderRoadmap(); });
 el('rq').addEventListener('input', e => { RF.q = e.target.value; renderRoadmap(); });
 el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap(); });
 el('fsBtn').addEventListener('click', () => {
