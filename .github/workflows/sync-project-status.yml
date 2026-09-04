@@ -2,18 +2,14 @@ name: Sincronizar status do Project nas labels
 
 # O painel (Roadmap) lê issues pela API pública, que não enxerga o campo
 # "Status" do Project (isso exige login). Este workflow é a ponte: lê o
-# Project via GraphQL (precisa do PROJECT_PAT, com permissão de conta
-# "Projects: Read-only" + permissão de repositório "Issues: Read and write")
-# e espelha o Status de cada item numa label da issue correspondente —
-# a mesma label que o Roadmap usa pra decidir a coluna.
-#
-# Só roda sob comando (aba Actions → Run workflow), sem agendamento —
-# de propósito: enquanto o secret PROJECT_PAT não existir, um cron aqui
-# falharia a cada execução e mandaria e-mail de falha sem parar. Depois
-# que o secret estiver cadastrado e uma execução manual confirmar que
-# funciona, é seguro voltar a agendar (basta adicionar de volta um bloco
-# `schedule:` com o cron desejado).
+# Project via GraphQL (precisa do PROJECT_PAT — um token clássico com os
+# escopos "repo" e "project"; o fine-grained não expõe permissão de
+# Projects para conta pessoal, só para organização) e espelha o Status
+# de cada item numa label da issue correspondente — a mesma label que
+# o Roadmap usa pra decidir a coluna.
 on:
+  schedule:
+    - cron: '*/20 * * * *'
   workflow_dispatch: {}
 
 jobs:
