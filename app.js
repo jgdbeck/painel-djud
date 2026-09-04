@@ -461,6 +461,19 @@ function filteredIssues() {
   });
 }
 
+function ghAssignees(iss) {
+  const list = (iss.assignees && iss.assignees.length) ? iss.assignees : (iss.assignee ? [iss.assignee] : []);
+  return list.length ? list.map(a => a.login).join(', ') : 'Sem responsável';
+}
+/* Data por extenso (dia/mês/ano) em vez de "há X dias": evita ambiguidade
+   quando a issue passou meses sem nenhum comentário (o que é comum aqui). */
+function ghUpdated(iss) {
+  const d = new Date(iss.updated_at);
+  const data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const coment = iss.comments === 1 ? '1 comentário' : `${iss.comments} comentários`;
+  return `${data} · ${coment}`;
+}
+
 function issueCard(iss) {
   const cond = ghHasLabel(iss.labels, 'Condicional (acesso/SEI)');
   const estrut = ghHasLabel(iss.labels, 'Estrutural (sem prioridade)');
@@ -474,14 +487,19 @@ function issueCard(iss) {
   node.innerHTML = `
     <div class="pcard-head">
       <h3><a href="${esc(iss.html_url)}" target="_blank" rel="noopener">${esc(iss.title)}</a></h3>
+      <span class="ghnum">#${iss.number}</span>
       <span class="stbadge" data-ghstate="${esc(iss.state)}">${iss.state === 'open' ? 'Aberta' : 'Fechada'}</span>
     </div>
-    ${desc ? `<p class="prod-note">${esc(desc)}</p>` : ''}
     ${cond ? `<div class="pcard-tagline"><span class="card-warn">Condicional — acesso/SEI</span></div>` : ''}
-    <div class="pcard-meta">
+    <div class="gh-block">
+      <span class="gh-cap">Descrição</span>
+      <p class="prod-note gh-desc">${desc ? esc(desc) : 'Sem descrição.'}</p>
+    </div>
+    <div class="pcard-meta gh-meta">
+      <div><span class="ml">Responsável</span><span class="mv b">${esc(ghAssignees(iss))}</span></div>
+      <div><span class="ml">Andamento</span><span class="mv">${esc(ghUpdated(iss))}</span></div>
       <div><span class="ml">Prioridade</span><span class="mv b">${esc(prioText)}</span></div>
       <div><span class="ml">Complexidade</span><span class="mv b">${esc(compText)}</span></div>
-      <div><span class="ml">Issue</span><span class="mv">#${iss.number}</span></div>
     </div>`;
   return node;
 }

@@ -230,6 +230,12 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .pcard-head h3 a:hover{text-decoration:underline}
 .stbadge[data-ghstate="open"]{color:var(--st-and);background:var(--st-and-bg)}
 .stbadge[data-ghstate="closed"]{color:var(--st-con);background:var(--st-con-bg)}
+.ghnum{color:var(--muted);font-size:11px;font-weight:600;white-space:nowrap}
+.gh-block{margin-top:10px}
+.gh-cap{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px}
+.gh-desc{margin:0}
+.gh-meta{grid-template-columns:1fr 1fr}
+@media (max-width:480px){.gh-meta{grid-template-columns:1fr}}
 
 /* ações de edição no card de produto */
 .pcard-actions{opacity:0;transition:opacity .12s}
