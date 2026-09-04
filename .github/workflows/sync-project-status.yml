@@ -6,9 +6,14 @@ name: Sincronizar status do Project nas labels
 # "Projects: Read-only" + permissão de repositório "Issues: Read and write")
 # e espelha o Status de cada item numa label da issue correspondente —
 # a mesma label que o Roadmap usa pra decidir a coluna.
+#
+# Só roda sob comando (aba Actions → Run workflow), sem agendamento —
+# de propósito: enquanto o secret PROJECT_PAT não existir, um cron aqui
+# falharia a cada execução e mandaria e-mail de falha sem parar. Depois
+# que o secret estiver cadastrado e uma execução manual confirmar que
+# funciona, é seguro voltar a agendar (basta adicionar de volta um bloco
+# `schedule:` com o cron desejado).
 on:
-  schedule:
-    - cron: '*/20 * * * *'
   workflow_dispatch: {}
 
 jobs:
