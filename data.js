@@ -39,7 +39,7 @@ const SEED = [
   "acesso": "sem acesso hoje",
   "prio": "1",
   "comp": "Alta",
-  "obs": "pedido da diretora",
+  "obs": "pedido da diretora; alinhado com Andrei sobre os acessos ao Sapiens — reunião com a CONJUR em 08/09/2026 para tratar do tema",
   "warn": "sem acesso (Sapiens/EPROC)",
   "status": "Não iniciada",
   "pct": 0,
