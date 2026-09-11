@@ -63,6 +63,22 @@ const SEED = [
   "prazo": "Curto prazo"
  },
  {
+  "id": "d37",
+  "coord": "DIRETORA",
+  "titulo": "Cumprimento do prazo judicial (decisão do juiz) por processo",
+  "oque": "Acompanhar, por processo, se o prazo que o próprio juiz fixou na decisão está sendo cumprido — diferente do prazo-regra da Portaria 7676 (já coberto pela demanda 'Tempo do processo'), porque o juiz pode determinar um prazo bem menor (ex.: 5 dias, contra os 30 dias-regra de um depósito). O desafio: esse prazo não é um dado estruturado em nenhum sistema — ele só existe escrito dentro do texto da decisão judicial, um documento de dentro do processo no SEI. Só dá pra alimentar isso de duas formas: (1) alguém lê o processo e digita esse prazo manualmente em algum lugar, ou (2) no futuro, com acesso aos documentos e um mecanismo de leitura por IA, tentar inferir o prazo automaticamente — sem garantia de acerto.",
+  "fonte": "Documentos de dentro do processo (SEI) — decisão judicial",
+  "acesso": "sem acesso hoje",
+  "prio": "1",
+  "comp": "Muito alta",
+  "obs": "pedido do Andrei Barros Monteiro Mota (CGPJUD) e da diretora",
+  "warn": "prazo do juiz só existe dentro do processo (SEI)",
+  "status": "Não iniciada",
+  "pct": 0,
+  "produto": "Extração de documentos do SEI (separado)",
+  "prazo": "A definir"
+ },
+ {
   "id": "d03",
   "coord": "TRANSVERSAIS (afetam várias áreas)",
   "titulo": "Recuperação dos dados históricos",
