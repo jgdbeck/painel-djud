@@ -431,6 +431,22 @@ const SEED = [
   "prazo": "A definir"
  },
  {
+  "id": "d36",
+  "coord": "CGPJUD — Ressarcimento pelos estados",
+  "titulo": "Alerta de movimentação das TEDs",
+  "oque": "Avisar automaticamente a cada movimentação nos processos das TEDs — pedido de centralização, envio para o financeiro, ou qualquer outro passo da tramitação — assim que acontecer. Mesma lógica do alerta de medicamentos emergenciais (pré-entrada), aplicada ao andamento das TEDs.",
+  "fonte": "Web service do SEI (tramitação)",
+  "acesso": "depende de liberar o acesso",
+  "prio": "A definir",
+  "comp": "Alta",
+  "obs": "pedido do Andrei Barros Monteiro Mota (CGPJUD)",
+  "warn": "",
+  "status": "Não iniciada",
+  "pct": 0,
+  "produto": "Alertas (transversal)",
+  "prazo": "Médio prazo"
+ },
+ {
   "id": "d26",
   "coord": "CGPO — Planejamento e Orçamento",
   "titulo": "Orçamento gasto no ano (SIAFI)",
