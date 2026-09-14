@@ -295,10 +295,10 @@ const SEED = [
   "acesso": "acesso liberado",
   "prio": "1",
   "comp": "Média",
-  "obs": "",
+  "obs": "Douglas (TI do DJUD) e a diretora Tarciana já têm acesso ao painel do DLog; em avaliação com a equipe da Caroline (CGLJUD) para levantar pontos de melhoria antes de alinhar o produto final.",
   "warn": "",
-  "status": "Não iniciada",
-  "pct": 0,
+  "status": "Em andamento",
+  "pct": 15,
   "produto": "Estoque e logística (SISMAT)",
   "prazo": "Médio prazo"
  },
