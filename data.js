@@ -151,7 +151,7 @@ const SEED = [
   "acesso": "acesso liberado",
   "prio": "2",
   "comp": "Baixa",
-  "obs": "",
+  "obs": "Andrei: dá pra deduzir a UF pela estrutura do nº CNJ (NNNNNNN-DD.AAAA.J.TR.CCCC) — o segmento TR já indica o tribunal/região (ex.: 4.01 = TRF1/DF); pode existir API pública para automatizar essa consulta (a confirmar).",
   "warn": "",
   "status": "Não iniciada",
   "pct": 0,
