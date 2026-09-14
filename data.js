@@ -303,6 +303,22 @@ const SEED = [
   "prazo": "Curto prazo"
  },
  {
+  "id": "d39",
+  "coord": "CGLJUD — Logística Judicial",
+  "titulo": "Autorização do DLOG para uso dos dados do SISMAT pela UFSC",
+  "oque": "Ofício do DJUD ao DLOG solicitando autorização formal para que a UFSC — equipe técnica responsável pelos painéis do DJUD — utilize, na construção dos painéis de estoque/logística, os dados do SISMAT aos quais já tem acesso por outro projeto/termo de cooperação com o Ministério. É diferente do acesso de visualização que o Douglas e a diretora Tarciana já têm ao painel do DLog (d16): aqui é a autorização formal para o uso desses dados no pipeline técnico da UFSC.",
+  "fonte": "SISMAT (estoque / DLog) — autorização formal de uso pela UFSC",
+  "acesso": "ofício em elaboração",
+  "prio": "1",
+  "comp": "Baixa",
+  "obs": "documento (ofício DJUD → DLOG) já elaborado; faltam preencher destinatário, datas e assinaturas antes do envio",
+  "warn": "",
+  "status": "Em andamento",
+  "pct": 20,
+  "produto": "Estoque e logística (SISMAT)",
+  "prazo": "Curto prazo"
+ },
+ {
   "id": "d16",
   "coord": "CGLJUD — Logística Judicial",
   "titulo": "Painel de estoque (SISMAT)",
