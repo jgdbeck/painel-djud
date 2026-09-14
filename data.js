@@ -111,6 +111,22 @@ const SEED = [
   "prazo": "Curto prazo"
  },
  {
+  "id": "d38",
+  "coord": "TRANSVERSAIS (afetam várias áreas)",
+  "titulo": "Acesso programático às planilhas do SharePoint (App Registration)",
+  "oque": "Ofício do DJUD para a diretora do DATASUS (Paula Xavier dos Santos, SEIDIGI/MS) solicitando a criação de um App Registration no Microsoft Entra ID (app-djud, single tenant, permissão de aplicação Sites.Selected somente leitura, via client credentials — sem credenciais de usuário), para viabilizar a leitura automatizada, via Microsoft Graph, das planilhas do SharePoint mantidas pelas coordenações do DJUD (CGMED, CGAJUD, CGLJUD, CGPJUD, CGPO, Gabinete). Vinculado ao Termo de Execução Descentralizada com a UFSC. É essa liberação que destrava o acesso 'Planilhas das áreas (SharePoint)' hoje pendente em várias outras demandas (repositório de preços, painel CGAJUD, intimações, reabertura por desabastecimento, remanejamento SISMAT, planilha de depósitos e banco de respostas/LAI).",
+  "fonte": "Planilhas das áreas (SharePoint) — via Microsoft Graph / App Registration",
+  "acesso": "ofício em elaboração",
+  "prio": "1",
+  "comp": "Média",
+  "obs": "solicitação da UFSC ao DATASUS por meio do DJUD; de acordo já previsto da diretora Tarciana",
+  "warn": "",
+  "status": "Em andamento",
+  "pct": 20,
+  "produto": "",
+  "prazo": "Curto prazo"
+ },
+ {
   "id": "d05",
   "coord": "TRANSVERSAIS (afetam várias áreas)",
   "titulo": "Consolidação dos depósitos (FUNDO)",
