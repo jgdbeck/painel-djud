@@ -1,0 +1,133 @@
+name: Preencher datas no Project
+
+# Workflow manual (não roda sozinho). Grava os campos "Start date" e
+# "Target date" de cada issue no Project, a partir da estimativa combinada
+# no cronograma (a mesma que está em TIMELINE_DEMO, em data.js — se o plano
+# mudar, atualize o mapa PRAZOS abaixo e rode de novo; sobrescrever com a
+# mesma data não faz mal). Depois de rodar, dispare também o
+# "Sincronizar status e prazos do Project" para atualizar o
+# timeline-data.json que o painel lê.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  preencher:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gravar Start date / Target date no Project
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const OWNER = 'jgdbeck';
+            const REPO = 'painel-djud';
+            const PROJECT_NUMBER = 1;
+
+            // uid (nº da issue) -> { inicio, termino }, vindo do cronograma (TIMELINE_DEMO em data.js).
+            const PRAZOS = {
+              '152': { inicio: '2026-09-15', termino: '2026-10-29' },
+              '156': { inicio: '2026-11-03', termino: '2026-12-26' },
+              '162': { inicio: '2026-09-23', termino: '2027-01-13' },
+              '159': { inicio: '2026-12-21', termino: '2027-01-31' },
+              '151': { inicio: '2026-12-24', termino: '2027-02-16' },
+              '150': { inicio: '2027-01-01', termino: '2027-02-23' },
+              '154': { inicio: '2027-01-09', termino: '2027-03-17' },
+              '153': { inicio: '2027-01-12', termino: '2027-04-02' },
+              '157': { inicio: '2027-03-31', termino: '2027-04-30' },
+              '146': { inicio: '2027-04-28', termino: '2027-05-15' },
+              '161': { inicio: '2027-05-06', termino: '2027-06-02' },
+              '149': { inicio: '2027-05-09', termino: '2027-06-09' },
+              '147': { inicio: '2027-05-17', termino: '2027-06-25' },
+              '164': { inicio: '2027-05-25', termino: '2027-07-05' },
+              '175': { inicio: '2027-05-28', termino: '2027-07-26' },
+              '155': { inicio: '2027-05-31', termino: '2027-08-11' },
+              '166': { inicio: '2027-06-08', termino: '2027-08-31' },
+              '163': { inicio: '2027-06-16', termino: '2027-09-16' },
+              '172': { inicio: '2027-06-24', termino: '2027-10-02' },
+              '158': { inicio: '2027-07-02', termino: '2027-10-28' },
+              '148': { inicio: '2027-07-05', termino: '2027-11-13' },
+              '160': { inicio: '2027-07-14', termino: '2027-12-04' },
+              '174': { inicio: '2027-07-17', termino: '2027-12-20' },
+              '165': { inicio: '2027-07-25', termino: '2028-01-12' },
+              '167': { inicio: '2027-08-02', termino: '2028-02-04' },
+              '168': { inicio: '2027-08-10', termino: '2028-02-27' },
+              '169': { inicio: '2027-08-18', termino: '2028-03-21' },
+              '170': { inicio: '2027-08-26', termino: '2028-04-10' },
+              '173': { inicio: '2027-09-03', termino: '2028-05-03' },
+              '176': { inicio: '2027-09-11', termino: '2028-05-26' },
+            };
+
+            async function fetchProjeto() {
+              let items = [];
+              let cursor = null;
+              let projectId = null, campoInicioId = null, campoFimId = null;
+              for (;;) {
+                const res = await github.graphql(
+                  `query($login:String!, $number:Int!, $cursor:String) {
+                    user(login:$login) {
+                      projectV2(number:$number) {
+                        id
+                        campoInicio: field(name:"Start date") { ... on ProjectV2FieldCommon { id name } }
+                        campoFim: field(name:"Target date") { ... on ProjectV2FieldCommon { id name } }
+                        items(first:100, after:$cursor) {
+                          pageInfo { hasNextPage endCursor }
+                          nodes {
+                            id
+                            content {
+                              __typename
+                              ... on Issue { number repository { name owner { login } } }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }`,
+                  { login: OWNER, number: PROJECT_NUMBER, cursor }
+                );
+                const proj = res.user.projectV2;
+                projectId = proj.id;
+                campoInicioId = proj.campoInicio && proj.campoInicio.id;
+                campoFimId = proj.campoFim && proj.campoFim.id;
+                items = items.concat(proj.items.nodes);
+                if (!proj.items.pageInfo.hasNextPage) break;
+                cursor = proj.items.pageInfo.endCursor;
+              }
+              return { projectId, campoInicioId, campoFimId, items };
+            }
+
+            async function gravarData(projectId, itemId, fieldId, data) {
+              await github.graphql(
+                `mutation($project:ID!, $item:ID!, $field:ID!, $data:Date!) {
+                  updateProjectV2ItemFieldValue(input: {
+                    projectId:$project, itemId:$item, fieldId:$field, value:{ date:$data }
+                  }) { projectV2Item { id } }
+                }`,
+                { project: projectId, item: itemId, field: fieldId, data }
+              );
+            }
+
+            const { projectId, campoInicioId, campoFimId, items } = await fetchProjeto();
+            if (!campoInicioId || !campoFimId) {
+              core.setFailed('Não achei os campos "Start date" e/ou "Target date" no Project #' + PROJECT_NUMBER + '. Confira o nome exato dos campos.');
+              return;
+            }
+
+            const porNumero = new Map();
+            for (const it of items) {
+              const c = it.content;
+              if (!c || c.__typename !== 'Issue') continue;
+              if (c.repository.owner.login !== OWNER || c.repository.name !== REPO) continue;
+              porNumero.set(String(c.number), it.id);
+            }
+
+            let ok = 0, semItem = [];
+            for (const [uid, prazo] of Object.entries(PRAZOS)) {
+              const itemId = porNumero.get(uid);
+              if (!itemId) { semItem.push(uid); continue; }
+              await gravarData(projectId, itemId, campoInicioId, prazo.inicio);
+              await gravarData(projectId, itemId, campoFimId, prazo.termino);
+              ok++;
+            }
+
+            core.info(`${ok} issue(s) atualizada(s) com início/término.`);
+            if (semItem.length) core.warning(`Sem item no Project (não preenchidas): #${semItem.join(', #')}`);
