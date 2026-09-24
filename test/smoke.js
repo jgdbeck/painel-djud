@@ -160,7 +160,20 @@ async function demo() {
   const diasEntrega = w.document.querySelectorAll('#tlArea .tl-cal-active').length;
   ok(itensEntrega < itensAndamento, 'foco "Entrega" mostra menos itens por mês que "Em andamento" (só quem termina naquele mês)');
   ok(diasEntrega < diasAndamento, 'foco "Entrega" marca só o dia do término no mini-calendário, não o período inteiro');
+  ok(w.document.querySelectorAll('#tlArea .tl-cal-day-entrega').length > 0, 'foco "Entrega" contorna o quadro do dia inteiro');
   t.TL.foco = 'andamento'; t.renderTimeline();
+  ok(w.document.querySelectorAll('#tlArea .tl-cal-day-entrega').length === 0, 'contorno de entrega some fora do foco "Entrega"');
+
+  // filtro de ano: reduz os blocos de mês mostrados, não os entregáveis
+  const mesesTodosAnos = w.document.querySelectorAll('#tlArea .tl-block').length;
+  const opcoesAno = [...w.document.querySelectorAll('#tlAno option')].map(o => o.value).filter(Boolean);
+  ok(opcoesAno.length > 1, 'filtro de ano lista mais de um ano (dado do cronograma cruza vários anos)');
+  t.TL.ano = opcoesAno[0]; t.renderTimeline();
+  const mesesUmAno = w.document.querySelectorAll('#tlArea .tl-block').length;
+  ok(mesesUmAno > 0 && mesesUmAno < mesesTodosAnos, 'filtro de ano mostra menos blocos de mês que "todos os anos"');
+  ok([...w.document.querySelectorAll('#tlArea .tl-block-ano')].every(el => el.textContent === opcoesAno[0]), 'todos os blocos mostrados são do ano filtrado');
+  t.TL.ano = ''; t.renderTimeline();
+
   t.TL.view = 'lista'; t.renderTimeline();
   ok(w.document.querySelectorAll('#tlArea .tl-row').length > 0, 'linha do tempo (lista) renderiza as linhas por entregável');
   t.TL.view = 'calendario'; t.renderTimeline();

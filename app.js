@@ -602,7 +602,7 @@ const TL_GRUPO_LABEL = {
   1: 'Em andamento', 2: 'Sem bloqueio de acesso', 3: 'Aguardam o teste do web service do SEI',
   4: 'Dependem de outra entrega do painel', 5: 'Bloqueadas por acesso externo',
 };
-const TL = { q: '', view: 'calendario', foco: 'andamento' };
+const TL = { q: '', view: 'calendario', foco: 'andamento', ano: '' };
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 /* timeline-data.json é gerado pelo workflow sync-project-status.yml a partir dos
@@ -636,7 +636,7 @@ function filteredTimeline() {
    cores de coordenação já usadas no resto do painel. */
 const TL_CORES = ['#3B2A6B', '#2E8B8B', '#1E7A4B', '#A86A0C', '#B23A34', '#2F6699', '#6B5CA6', '#9A5B2E'];
 
-function timelineMonths(items) {
+function mesesDoIntervalo(items) {
   const inicios = items.map(it => new Date(it.inicio + 'T00:00:00'));
   const terminos = items.map(it => new Date(it.termino + 'T00:00:00'));
   let cursor = new Date(Math.min(...inicios)); cursor.setDate(1);
@@ -652,6 +652,16 @@ function timelineMonths(items) {
   }
   return out;
 }
+/* filtro de ano (TL.ano): reduz quais meses aparecem, não quais entregáveis existem —
+   um entregável que atravessa o ano continua contando nos meses dele que caem no filtro */
+function timelineMonths(items) {
+  const meses = mesesDoIntervalo(items);
+  return TL.ano ? meses.filter(mes => mes.y === Number(TL.ano)) : meses;
+}
+function fillTimelineAnoSelect() {
+  const anos = [...new Set(mesesDoIntervalo(timelineItens()).map(mes => mes.y))].sort((a, b) => a - b);
+  el('tlAno').innerHTML = '<option value="">Ano: todos</option>' + anos.map(a => `<option value="${a}"${String(a) === TL.ano ? ' selected' : ''}>${a}</option>`).join('');
+}
 
 function renderTimeline() {
   const area = el('tlArea');
@@ -661,6 +671,7 @@ function renderTimeline() {
   document.querySelectorAll('#tlView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlview === TL.view)));
   document.querySelectorAll('#tlFoco button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlfoco === TL.foco)));
   el('tlFoco').classList.toggle('hidden', TL.view !== 'calendario');
+  fillTimelineAnoSelect();
   area.innerHTML = '';
   if (!items.length) { area.innerHTML = '<div class="empty">Nenhum entregável encontrado com esse filtro.</div>'; return; }
   if (TL.view === 'lista') renderTimelineLista(area, items);
@@ -798,7 +809,10 @@ function calGridHTML(y, m, doMes, mapaCores, foco) {
     const uids = ativos.map(it => it.uid).join(' ');
     const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
     const barras = ativos.slice(0, 4).map(it => `<span style="background:${mapaCores.get(it.uid)}"></span>`).join('');
-    html += `<div class="tl-cal-day${ativos.length ? ' tl-cal-active' : ''}" data-uids="${esc(uids)}" title="${title}">${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
+    const classes = ['tl-cal-day'];
+    if (ativos.length) classes.push('tl-cal-active');
+    if (ativos.length && foco === 'entrega') classes.push('tl-cal-day-entrega');
+    html += `<div class="${classes.join(' ')}" data-uids="${esc(uids)}" title="${title}">${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
   }
   html += '</div>';
   return html;
@@ -1080,6 +1094,7 @@ el('aRefreshBtn').addEventListener('click', () => { ISSUES = null; renderDash();
 el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
 document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
 document.querySelectorAll('#tlFoco button').forEach(b => b.addEventListener('click', () => { TL.foco = b.dataset.tlfoco; renderTimeline(); }));
+el('tlAno').addEventListener('change', e => { TL.ano = e.target.value; renderTimeline(); });
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
