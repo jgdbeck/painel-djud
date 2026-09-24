@@ -1,1 +1,242 @@
-[]
+[
+  {
+    "uid": "152",
+    "entregavel": "Painel de estoque (SISMAT) + remanejamento",
+    "inicio": "2026-09-15",
+    "termino": "2026-10-29",
+    "status": "Em andamento",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/152"
+  },
+  {
+    "uid": "162",
+    "entregavel": "Alerta de medicamentos emergenciais (pré-entrada)",
+    "inicio": "2026-09-23",
+    "termino": "2027-01-13",
+    "status": "Em andamento",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/162"
+  },
+  {
+    "uid": "156",
+    "entregavel": "Painel de medicamentos mais judicializados",
+    "inicio": "2026-11-03",
+    "termino": "2026-12-26",
+    "status": "Em andamento",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/156"
+  },
+  {
+    "uid": "159",
+    "entregavel": "Alerta de reabertura antes do desabastecimento",
+    "inicio": "2026-12-21",
+    "termino": "2027-01-31",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/159"
+  },
+  {
+    "uid": "151",
+    "entregavel": "Painel de depósitos (FUNDO)",
+    "inicio": "2026-12-24",
+    "termino": "2027-02-16",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/151"
+  },
+  {
+    "uid": "150",
+    "entregavel": "Painel de preços-teto (CMED/PMVG)",
+    "inicio": "2027-01-01",
+    "termino": "2027-02-23",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/150"
+  },
+  {
+    "uid": "154",
+    "entregavel": "Painel de atas (saldo/vencimento) + trocas",
+    "inicio": "2027-01-09",
+    "termino": "2027-03-17",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/154"
+  },
+  {
+    "uid": "153",
+    "entregavel": "Painel de compras (DFDs + prioritárias/414)",
+    "inicio": "2027-01-12",
+    "termino": "2027-04-02",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/153"
+  },
+  {
+    "uid": "157",
+    "entregavel": "Painel de ressarcimento (valor + regras)",
+    "inicio": "2027-03-31",
+    "termino": "2027-04-30",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/157"
+  },
+  {
+    "uid": "146",
+    "entregavel": "Painel de tempestividade (tempo do processo)",
+    "inicio": "2027-04-28",
+    "termino": "2027-05-15",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/146"
+  },
+  {
+    "uid": "161",
+    "entregavel": "Alerta de criticidade das demandas externas (semáforo)",
+    "inicio": "2027-05-06",
+    "termino": "2027-06-02",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/161"
+  },
+  {
+    "uid": "149",
+    "entregavel": "Painel de acompanhamento da assessoria",
+    "inicio": "2027-05-09",
+    "termino": "2027-06-09",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/149"
+  },
+  {
+    "uid": "147",
+    "entregavel": "Painel de produção por farmacêutico",
+    "inicio": "2027-05-17",
+    "termino": "2027-06-25",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/147"
+  },
+  {
+    "uid": "164",
+    "entregavel": "Rotina de lista de processos sob demanda",
+    "inicio": "2027-05-25",
+    "termino": "2027-07-05",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/164"
+  },
+  {
+    "uid": "175",
+    "entregavel": "Alerta de movimentação das TEDs",
+    "inicio": "2027-05-28",
+    "termino": "2027-07-26",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/175"
+  },
+  {
+    "uid": "155",
+    "entregavel": "Painel consolidado da CGAJUD (automatizado)",
+    "inicio": "2027-05-31",
+    "termino": "2027-08-11",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/155"
+  },
+  {
+    "uid": "166",
+    "entregavel": "Planilha de depósitos preenchida automaticamente",
+    "inicio": "2027-06-08",
+    "termino": "2027-08-31",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/166"
+  },
+  {
+    "uid": "163",
+    "entregavel": "Modelo/repositório de respostas de LAI",
+    "inicio": "2027-06-16",
+    "termino": "2027-09-16",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/163"
+  },
+  {
+    "uid": "172",
+    "entregavel": "Repositório de preços de mercado (consultas semanais)",
+    "inicio": "2027-06-24",
+    "termino": "2027-10-02",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/172"
+  },
+  {
+    "uid": "158",
+    "entregavel": "Alerta de prazos e pendências",
+    "inicio": "2027-07-02",
+    "termino": "2027-10-28",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/158"
+  },
+  {
+    "uid": "148",
+    "entregavel": "Painel de execução e projeção orçamentária (SIAFI)",
+    "inicio": "2027-07-05",
+    "termino": "2027-11-13",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/148"
+  },
+  {
+    "uid": "160",
+    "entregavel": "Rotina de checagem de óbito (Receita Federal/SIM)",
+    "inicio": "2027-07-14",
+    "termino": "2027-12-04",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/160"
+  },
+  {
+    "uid": "174",
+    "entregavel": "Banco de Notas Técnicas (SDJud)",
+    "inicio": "2027-07-17",
+    "termino": "2027-12-20",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/174"
+  },
+  {
+    "uid": "165",
+    "entregavel": "Repositório de dados do paciente",
+    "inicio": "2027-07-25",
+    "termino": "2028-01-12",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/165"
+  },
+  {
+    "uid": "167",
+    "entregavel": "Recuperação de histórico / projeção de demanda",
+    "inicio": "2027-08-02",
+    "termino": "2028-02-04",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/167"
+  },
+  {
+    "uid": "168",
+    "entregavel": "Painel de saldo dos TEDs",
+    "inicio": "2027-08-10",
+    "termino": "2028-02-27",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/168"
+  },
+  {
+    "uid": "169",
+    "entregavel": "Painel público (LAI)",
+    "inicio": "2027-08-18",
+    "termino": "2028-03-21",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/169"
+  },
+  {
+    "uid": "170",
+    "entregavel": "Painel de condenações por danos morais",
+    "inicio": "2027-08-26",
+    "termino": "2028-04-10",
+    "status": "Backlog",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/170"
+  },
+  {
+    "uid": "173",
+    "entregavel": "Painel de intimações (SISDJUD)",
+    "inicio": "2027-09-03",
+    "termino": "2028-05-03",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/173"
+  },
+  {
+    "uid": "176",
+    "entregavel": "Monitoramento Cumprimento do prazo judicial (decisão do juiz) por processo",
+    "inicio": "2027-09-11",
+    "termino": "2028-05-26",
+    "status": "Parado",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/176"
+  }
+]
