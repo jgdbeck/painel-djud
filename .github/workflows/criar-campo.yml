@@ -1,12 +1,22 @@
-name: Criar campo % Complete no Project
+name: Criar campo no Project
 
-# Workflow manual, de uso único: cria o campo numérico "% Complete" no
-# Project (nº 1), se ele ainda não existir. Depois de criado, o time
-# preenche o % de cada issue direto no Project (não tem como isso vir de
-# outro lugar — é acompanhamento manual mesmo); sync-project-status.yml já
-# está pronto para ler esse campo assim que ele existir e tiver valores.
+# Workflow manual e reutilizável: cria um campo no Project (nº 1) com o nome e
+# tipo informados, se ele ainda não existir. Rode em Actions > Criar campo no
+# Project > Run workflow, preenchendo "nome" (precisa bater exatamente com o
+# que sync-project-status.yml espera) e "tipo".
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      nome:
+        description: 'Nome exato do campo (ex.: "URL do entregável")'
+        required: true
+        type: string
+      tipo:
+        description: 'Tipo do campo'
+        required: true
+        type: choice
+        options: [TEXT, NUMBER, DATE]
+        default: TEXT
 
 jobs:
   criar-campo:
@@ -19,7 +29,8 @@ jobs:
           script: |
             const OWNER = 'jgdbeck';
             const PROJECT_NUMBER = 1;
-            const NOME_CAMPO = '% Complete';
+            const NOME_CAMPO = ${{ toJSON(inputs.nome) }};
+            const TIPO_CAMPO = ${{ toJSON(inputs.tipo) }};
 
             // field(name:"...") dá erro (não null) quando o campo não existe, então a
             // checagem precisa listar todos os campos e procurar pelo nome do lado de cá.
@@ -43,13 +54,13 @@ jobs:
             }
 
             const criado = await github.graphql(
-              `mutation($projectId:ID!, $nome:String!) {
+              `mutation($projectId:ID!, $nome:String!, $tipo:ProjectV2CustomFieldType!) {
                 createProjectV2Field(input: {
-                  projectId:$projectId, dataType:NUMBER, name:$nome
+                  projectId:$projectId, dataType:$tipo, name:$nome
                 }) {
                   projectV2Field { ... on ProjectV2Field { id name } }
                 }
               }`,
-              { projectId: proj.id, nome: NOME_CAMPO }
+              { projectId: proj.id, nome: NOME_CAMPO, tipo: TIPO_CAMPO }
             );
-            core.info(`Campo "${NOME_CAMPO}" criado (id ${criado.createProjectV2Field.projectV2Field.id}).`);
+            core.info(`Campo "${NOME_CAMPO}" (${TIPO_CAMPO}) criado (id ${criado.createProjectV2Field.projectV2Field.id}).`);
