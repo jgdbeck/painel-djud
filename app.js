@@ -550,6 +550,10 @@ function filteredTimeline() {
   return (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []).filter(it => !q || it.entregavel.toLowerCase().includes(q));
 }
 
+/* Cores dos blocos só decoram (não têm significado); ciclam pelas mesmas
+   cores de coordenação já usadas no resto do painel. */
+const TL_CORES = ['#3B2A6B', '#2E8B8B', '#1E7A4B', '#A86A0C', '#B23A34', '#2F6699', '#6B5CA6', '#9A5B2E'];
+
 function renderTimeline() {
   const area = el('tlArea');
   const items = filteredTimeline();
@@ -562,30 +566,35 @@ function renderTimeline() {
   let cursor = new Date(Math.min(...inicios)); cursor.setDate(1);
   const fim = new Date(Math.max(...terminos));
 
+  const grid = document.createElement('div');
+  grid.className = 'tl-grid';
+  let mi = 0;
   while (cursor <= fim) {
     const y = cursor.getFullYear(), m = cursor.getMonth();
     const monthStart = new Date(y, m, 1), monthEnd = new Date(y, m + 1, 0);
     const doMes = items.filter(it => new Date(it.inicio + 'T00:00:00') <= monthEnd && new Date(it.termino + 'T00:00:00') >= monthStart)
       .sort((a, b) => a.inicio.localeCompare(b.inicio));
-    const panel = document.createElement('div');
-    panel.className = 'panel tl-month';
-    panel.innerHTML = `<h3>${MESES_PT[m]} de ${y}</h3>` +
+    const bloco = document.createElement('div');
+    bloco.className = 'tl-block';
+    bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
+    bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
+      `<div class="tl-block-body">` +
       (doMes.length
         ? doMes.map(it => {
             const entregaEsteMs = it.termino >= monthStart.toISOString().slice(0, 10) && it.termino <= monthEnd.toISOString().slice(0, 10);
-            return `<div class="tl-row">
+            return `<a class="tl-chip${entregaEsteMs ? ' tl-chip-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}%">
               <span class="ghnum">#${esc(it.uid)}</span>
-              <a class="tl-title" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.entregavel)}</a>
-              <span class="tl-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
-              ${entregaEsteMs ? '<span class="stbadge" data-ghstate="closed">entrega neste mês</span>' : ''}
-              <span class="tl-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</span>
+              <span class="tl-chip-tit">${esc(it.entregavel)}</span>
               <span class="tl-pct">${it.pct}%</span>
-            </div>`;
+            </a>`;
           }).join('')
-        : '<div class="hint">Nenhum entregável ativo neste mês.</div>');
-    area.appendChild(panel);
+        : '<div class="hint">Nenhum entregável ativo neste mês.</div>') +
+      `</div>`;
+    grid.appendChild(bloco);
+    mi++;
     cursor = new Date(y, m + 1, 1);
   }
+  area.appendChild(grid);
 }
 function fmtBr(iso) { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
 

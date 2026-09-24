@@ -237,16 +237,19 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .gh-meta{grid-template-columns:1fr 1fr}
 @media (max-width:480px){.gh-meta{grid-template-columns:1fr}}
 
-/* ---------- linha do tempo ---------- */
-.tl-month{margin-bottom:14px}
-.tl-month h3{margin-bottom:8px}
-.tl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
-.tl-row:first-of-type{border-top:0}
-.tl-title{color:var(--ink);font-weight:600;text-decoration:none;flex:1;min-width:200px}
-.tl-title:hover{text-decoration:underline}
-.tl-grupo{color:var(--muted);font-size:11.5px}
-.tl-dates{color:var(--ink-soft);font-size:12.5px;white-space:nowrap}
-.tl-pct{font-weight:700;font-size:12.5px;color:var(--exec);min-width:36px;text-align:right}
+/* ---------- linha do tempo (grade de blocos por mês, ao estilo calendário) ---------- */
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.tl-block{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;max-height:340px}
+.tl-block-head{display:flex;align-items:baseline;gap:8px;padding:12px 14px;background:var(--tl-cor);color:#fff}
+.tl-block-mes{font-weight:800;font-size:14.5px}
+.tl-block-ano{font-size:12px;opacity:.85}
+.tl-block-count{margin-left:auto;font-size:11px;font-weight:700;background:rgba(255,255,255,.22);border-radius:999px;padding:2px 8px}
+.tl-block-body{padding:10px 12px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+.tl-chip{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:10px;background:var(--page);text-decoration:none;color:var(--ink)}
+.tl-chip:hover{background:#E7ECF2}
+.tl-chip-entrega{border:1px solid var(--st-con);background:var(--st-con-bg)}
+.tl-chip-tit{flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-pct{font-weight:700;font-size:11.5px;color:var(--exec);white-space:nowrap}
 
 /* ações de edição no card de produto */
 .pcard-actions{opacity:0;transition:opacity .12s}
