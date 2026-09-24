@@ -127,20 +127,15 @@ function toast(msg, isErr) {
 }
 
 /* ---------- filtros ---------- */
-const F = { q: '', coord: '', prio: '', comp: '' }, FA = { coord: '', prio: '' };
+/* FA (Acompanhamento) filtra issues do GitHub, não DATA — por isso as chaves são
+   meta/prio (labels da issue), não coord como em F (que continua sendo o board/DATA). */
+const F = { q: '', coord: '', prio: '', comp: '' }, FA = { meta: '', prio: '' };
 function filtered() {
   return DATA.filter(c => {
     if (F.coord && c.coord !== F.coord) return false;
     if (F.prio && c.prio !== F.prio) return false;
     if (F.comp && c.comp !== F.comp) return false;
     if (F.q) { const t = (c.titulo + ' ' + c.oque + ' ' + c.fonte).toLowerCase(); if (!t.includes(F.q.toLowerCase())) return false; }
-    return true;
-  });
-}
-function filteredA() {
-  return DATA.filter(c => {
-    if (FA.coord && c.coord !== FA.coord) return false;
-    if (FA.prio && c.prio !== FA.prio) return false;
     return true;
   });
 }
@@ -284,26 +279,53 @@ function renderHomeSummary() {
     ${barRows(byCoord)}`;
 }
 
-function renderDash() {
-  const items = filteredA(), n = items.length, overall = avg(items.map(c => c.pct));
-  const cnt = s => items.filter(c => c.status === s).length;
-  const nao = cnt('Não iniciada'), and = cnt('Em andamento'), con = cnt('Concluída');
+/* Acompanhamento lê as issues do GitHub (mesma fonte do Roadmap), não mais a planilha de
+   demandas. GitHub não tem um campo de "% concluído" por issue ainda (só o Status do
+   Project); enquanto isso não existir, o % é aproximado a partir do próprio Status. */
+const GH_PCT = { 'Backlog': 0, 'Parado': 0, 'Em andamento': 50, 'Finalizado': 100, 'Registrado no relatório': 100 };
+const ghPct = iss => GH_PCT[ghColumn(iss)] ?? 0;
+const GH_STATUS_COR = { 'Backlog': '#8A8F98', 'Parado': 'var(--st-nao)', 'Em andamento': 'var(--st-and)', 'Finalizado': 'var(--st-con)', 'Registrado no relatório': 'var(--exec)' };
+
+function filteredDash() {
+  return (ISSUES || []).filter(iss => {
+    if (FA.meta && ghMeta(iss.labels) !== FA.meta) return false;
+    if (FA.prio && !ghValues(iss.labels, 'Prioridade ').includes(FA.prio)) return false;
+    return true;
+  });
+}
+
+async function renderDash() {
+  const area = el('dashArea');
+  if (!ISSUES && !issuesLoading) {
+    issuesLoading = true;
+    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    try { ISSUES = await fetchIssues(); }
+    catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
+    issuesLoading = false;
+    if (screen !== 'acomp') return;   // usuário já saiu da aba enquanto carregava
+  }
+  if (issuesLoading) return;
+
+  const items = filteredDash(), n = items.length, overall = avg(items.map(ghPct));
+  const statusCounts = RCOLS.map(c => ({ key: c.key, n: items.filter(iss => ghColumn(iss) === c.key).length }));
   const pctOf = k => n ? Math.round(k / n * 100) : 0;
-  const byPrio = PRIOS.map(p => { const g = items.filter(c => c.prio === p); return { label: 'Prioridade ' + p, n: g.length, pct: avg(g.map(c => c.pct)) }; });
-  const byComp = COMPS.map(v => { const g = items.filter(c => c.comp === v); return { label: v, n: g.length, pct: avg(g.map(c => c.pct)) }; });
-  const byCoord = COORDS.map(co => { const g = items.filter(c => c.coord === co.full); return { label: co.short, dot: co.dot, n: g.length, pct: avg(g.map(c => c.pct)) }; });
-  el('dashArea').innerHTML = `<div class="dash">
+  const andamento = statusCounts.find(s => s.key === 'Em andamento').n;
+  const concluidas = statusCounts.filter(s => s.key === 'Finalizado' || s.key === 'Registrado no relatório').reduce((a, s) => a + s.n, 0);
+  const byPrio = PRIOS.map(p => { const g = items.filter(iss => ghValues(iss.labels, 'Prioridade ').includes(p)); return { label: 'Prioridade ' + p, n: g.length, pct: avg(g.map(ghPct)) }; });
+  const byComp = COMPS.map(v => { const g = items.filter(iss => ghValues(iss.labels, 'Complexidade ').includes(v)); return { label: v, n: g.length, pct: avg(g.map(ghPct)) }; });
+  const byMeta = METAS.map(meta => { const g = items.filter(iss => ghMeta(iss.labels) === meta); return { label: meta.replace(/^Meta \d: /, ''), n: g.length, pct: avg(g.map(ghPct)) }; });
+  area.innerHTML = `<div class="dash">
     <div class="kpis">
-      <div class="kpi"><div>${ringSVG(overall)}</div><div><div class="lab">Execução geral</div><div class="sub2">média das ${n} iniciativas${(FA.coord || FA.prio) ? ' (filtro ativo)' : ''}</div></div></div>
-      <div class="kpi"><div><div class="big tabular">${n}</div><div class="lab">Iniciativas</div></div></div>
-      <div class="kpi"><div><div class="big tabular" style="color:var(--st-con)">${con}</div><div class="lab">Concluídas</div><div class="sub2">${pctOf(con)}% do total</div></div></div>
-      <div class="kpi"><div><div class="big tabular" style="color:var(--st-and)">${and}</div><div class="lab">Em andamento</div><div class="sub2">${nao} não iniciadas</div></div></div>
+      <div class="kpi"><div>${ringSVG(overall)}</div><div><div class="lab">Execução geral</div><div class="sub2">média das ${n} issues${(FA.meta || FA.prio) ? ' (filtro ativo)' : ''} · % aproximado a partir do status</div></div></div>
+      <div class="kpi"><div><div class="big tabular">${n}</div><div class="lab">Issues</div></div></div>
+      <div class="kpi"><div><div class="big tabular" style="color:var(--st-con)">${concluidas}</div><div class="lab">Finalizadas</div><div class="sub2">${pctOf(concluidas)}% do total</div></div></div>
+      <div class="kpi"><div><div class="big tabular" style="color:var(--st-and)">${andamento}</div><div class="lab">Em andamento</div></div></div>
     </div>
-    <div class="panel"><h3>Situação das iniciativas</h3><div class="hint">Distribuição das iniciativas por situação de execução.</div>
-      <div class="statusbar"><span style="width:${pctOf(nao)}%;background:var(--st-nao)"></span><span style="width:${pctOf(and)}%;background:var(--st-and)"></span><span style="width:${pctOf(con)}%;background:var(--st-con)"></span></div>
-      <div class="slegend"><span class="k"><span class="sq" style="background:var(--st-nao)"></span> Não iniciada — <b>&nbsp;${nao}</b></span><span class="k"><span class="sq" style="background:var(--st-and)"></span> Em andamento — <b>&nbsp;${and}</b></span><span class="k"><span class="sq" style="background:var(--st-con)"></span> Concluída — <b>&nbsp;${con}</b></span></div></div>
-    <div class="panels"><div class="panel"><h3>Execução por prioridade</h3><div class="hint">Percentual médio de execução em cada nível de prioridade.</div>${barRows(byPrio)}</div><div class="panel"><h3>Execução por complexidade</h3><div class="hint">Percentual médio de execução em cada grau de complexidade.</div>${barRows(byComp)}</div></div>
-    <div class="panel"><h3>Execução por coordenação</h3><div class="hint">Percentual médio de execução em cada coordenação.</div>${barRows(byCoord)}</div></div>`;
+    <div class="panel"><h3>Situação das issues</h3><div class="hint">Distribuição pela coluna do Project (sincroniza a cada ~20min).</div>
+      <div class="statusbar">${statusCounts.map(s => `<span style="width:${pctOf(s.n)}%;background:${GH_STATUS_COR[s.key]}"></span>`).join('')}</div>
+      <div class="slegend">${statusCounts.map(s => `<span class="k"><span class="sq" style="background:${GH_STATUS_COR[s.key]}"></span> ${esc(s.key)} — <b>&nbsp;${s.n}</b></span>`).join('')}</div></div>
+    <div class="panels"><div class="panel"><h3>Execução por prioridade</h3><div class="hint">Percentual médio (aproximado) em cada nível de prioridade.</div>${barRows(byPrio)}</div><div class="panel"><h3>Execução por complexidade</h3><div class="hint">Percentual médio (aproximado) em cada grau de complexidade.</div>${barRows(byComp)}</div></div>
+    <div class="panel"><h3>Execução por meta</h3><div class="hint">Percentual médio (aproximado) em cada meta do roadmap.</div>${barRows(byMeta)}</div></div>`;
 }
 
 /* ---------- navegação ---------- */
@@ -631,10 +653,15 @@ function fillSelects() {
   el('mPrazo').innerHTML = opts(PRAZOS);
   const coordFilter = '<option value="">Coordenação: todas</option>' + COORDS.map(c => `<option value="${esc(c.full)}">${esc(c.short)}</option>`).join('');
   el('fcoord').innerHTML = coordFilter;
-  el('afcoord').innerHTML = coordFilter;
   el('fprio').innerHTML = '<option value="">Prioridade: todas</option>' + opts(PRIOS);
-  el('afprio').innerHTML = '<option value="">Prioridade: todas</option>' + opts(PRIOS);
   el('fcomp').innerHTML = '<option value="">Complexidade: todas</option>' + opts(COMPS);
+}
+
+/* Acompanhamento filtra por Meta/Prioridade das issues do GitHub, não por coordenação
+   (DATA/demandas não é mais a fonte desta aba). */
+function fillDashSelect() {
+  el('afmeta').innerHTML = '<option value="">Meta: todas</option>' + METAS.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  el('afprio').innerHTML = '<option value="">Prioridade: todas</option>' + opts(PRIOS);
 }
 
 function openEdit(id) {
@@ -793,7 +820,7 @@ el('q').addEventListener('input', e => { F.q = e.target.value; renderBoard(); })
 el('fcoord').addEventListener('change', e => { F.coord = e.target.value; renderBoard(); });
 el('fprio').addEventListener('change', e => { F.prio = e.target.value; renderBoard(); });
 el('fcomp').addEventListener('change', e => { F.comp = e.target.value; renderBoard(); });
-el('afcoord').addEventListener('change', e => { FA.coord = e.target.value; renderDash(); });
+el('afmeta').addEventListener('change', e => { FA.meta = e.target.value; renderDash(); });
 el('afprio').addEventListener('change', e => { FA.prio = e.target.value; renderDash(); });
 el('addBtn').addEventListener('click', () => openEdit(null));
 el('mSave').addEventListener('click', saveEdit);
@@ -829,6 +856,7 @@ el('resetBtn').addEventListener('click', async () => {
 el('rfmeta').addEventListener('change', e => { RF.meta = e.target.value; renderRoadmap(); });
 el('rq').addEventListener('input', e => { RF.q = e.target.value; renderRoadmap(); });
 el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap(); });
+el('aRefreshBtn').addEventListener('click', () => { ISSUES = null; renderDash(); });
 el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
@@ -843,6 +871,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeEdit(
 
 /* ---------- init ---------- */
 fillSelects();
+fillDashSelect();
 fillRoadmapSelect();
 if (LIVE) {
   try { const p = localStorage.getItem(PASSKEY); if (p) { auth.pass = p; auth.authed = true; } } catch (e) {}
