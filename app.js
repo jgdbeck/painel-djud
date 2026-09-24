@@ -564,59 +564,123 @@ const TL_GRUPO_LABEL = {
   1: 'Em andamento', 2: 'Sem bloqueio de acesso', 3: 'Aguardam o teste do web service do SEI',
   4: 'Dependem de outra entrega do painel', 5: 'Bloqueadas por acesso externo',
 };
-const TL = { q: '' };
+const TL = { q: '', view: 'calendario' };
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const DIAS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+/* timeline-data.json é gerado pelo workflow sync-project-status.yml a partir dos
+   campos "Start date" / "Target date" do Project (ver ali). Enquanto uma issue não
+   tiver os dois campos preenchidos no Project, ela não entra nesse arquivo — por
+   isso TIMELINE_DEMO continua servindo de exemplo/plano de fundo até o Project
+   estar totalmente preenchido. Busca é best-effort: falha em silêncio (inclusive
+   em file://, onde fetch de arquivo local é bloqueado) e cai no exemplo. */
+let TIMELINE_LIVE = null;
+async function loadTimelineLive() {
+  try {
+    const r = await fetch('timeline-data.json');
+    if (!r.ok) throw new Error('sem timeline-data.json');
+    const list = await r.json();
+    TIMELINE_LIVE = list.map(it => ({ ...it, pct: GH_PCT[it.status] ?? 0 }));
+  } catch (e) { TIMELINE_LIVE = []; }
+  return TIMELINE_LIVE;
+}
 
 function filteredTimeline() {
   const q = TL.q.toLowerCase();
-  return (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []).filter(it => !q || it.entregavel.toLowerCase().includes(q));
+  const fonte = (typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length) ? TIMELINE_LIVE : (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []);
+  return fonte.filter(it => !q || it.entregavel.toLowerCase().includes(q));
 }
 
 /* Cores dos blocos só decoram (não têm significado); ciclam pelas mesmas
    cores de coordenação já usadas no resto do painel. */
 const TL_CORES = ['#3B2A6B', '#2E8B8B', '#1E7A4B', '#A86A0C', '#B23A34', '#2F6699', '#6B5CA6', '#9A5B2E'];
 
-function renderTimeline() {
-  const area = el('tlArea');
-  const items = filteredTimeline();
-  el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com o GitHub</span>`;
-  area.innerHTML = '';
-  if (!items.length) { area.innerHTML = '<div class="empty">Nenhum entregável encontrado com esse filtro.</div>'; return; }
-
+function timelineMonths(items) {
   const inicios = items.map(it => new Date(it.inicio + 'T00:00:00'));
   const terminos = items.map(it => new Date(it.termino + 'T00:00:00'));
   let cursor = new Date(Math.min(...inicios)); cursor.setDate(1);
   const fim = new Date(Math.max(...terminos));
-
-  const grid = document.createElement('div');
-  grid.className = 'tl-grid';
-  let mi = 0;
+  const out = [];
   while (cursor <= fim) {
     const y = cursor.getFullYear(), m = cursor.getMonth();
     const monthStart = new Date(y, m, 1), monthEnd = new Date(y, m + 1, 0);
     const doMes = items.filter(it => new Date(it.inicio + 'T00:00:00') <= monthEnd && new Date(it.termino + 'T00:00:00') >= monthStart)
       .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    out.push({ y, m, monthStart, monthEnd, doMes });
+    cursor = new Date(y, m + 1, 1);
+  }
+  return out;
+}
+
+function renderTimeline() {
+  const area = el('tlArea');
+  const items = filteredTimeline();
+  const usaLive = typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length;
+  el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">${usaLive ? 'UID, início e término vêm do Project do GitHub (campos Start date / Target date)' : 'UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com o GitHub'}</span>`;
+  document.querySelectorAll('#tlView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlview === TL.view)));
+  area.innerHTML = '';
+  if (!items.length) { area.innerHTML = '<div class="empty">Nenhum entregável encontrado com esse filtro.</div>'; return; }
+  if (TL.view === 'lista') renderTimelineLista(area, items);
+  else renderTimelineCalendario(area, items);
+}
+
+function renderTimelineLista(area, items) {
+  timelineMonths(items).forEach(({ y, m, doMes }) => {
+    if (!doMes.length) return;
+    const panel = document.createElement('div');
+    panel.className = 'panel tl-month';
+    panel.innerHTML = `<h3>${MESES_PT[m]} ${y}</h3>` +
+      doMes.map(it => `<a class="tl-row" href="${esc(it.url)}" target="_blank" rel="noopener">
+        <span class="ghnum">#${esc(it.uid)}</span>
+        <span class="tl-row-tit">${esc(it.entregavel)}</span>
+        <span class="tl-row-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
+        <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</span>
+        <span class="tl-pct">${it.pct}%</span>
+      </a>`).join('');
+    area.appendChild(panel);
+  });
+}
+
+function renderTimelineCalendario(area, items) {
+  const grid = document.createElement('div');
+  grid.className = 'tl-grid';
+  timelineMonths(items).forEach(({ y, m, doMes }, mi) => {
     const bloco = document.createElement('div');
     bloco.className = 'tl-block';
     bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
     bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
       `<div class="tl-block-body">` +
+      diaGridHTML(y, m, doMes) +
       (doMes.length
-        ? doMes.map(it => {
-            const entregaEsteMs = it.termino >= monthStart.toISOString().slice(0, 10) && it.termino <= monthEnd.toISOString().slice(0, 10);
-            return `<a class="tl-chip${entregaEsteMs ? ' tl-chip-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}%">
+        ? doMes.map(it => `<a class="tl-chip${it.termino >= `${y}-${String(m + 1).padStart(2, '0')}-01` && it.termino <= `${y}-${String(m + 1).padStart(2, '0')}-31` ? ' tl-chip-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}%">
               <span class="ghnum">#${esc(it.uid)}</span>
               <span class="tl-chip-tit">${esc(it.entregavel)}</span>
               <span class="tl-pct">${it.pct}%</span>
-            </a>`;
-          }).join('')
+            </a>`).join('')
         : '<div class="hint">Nenhum entregável ativo neste mês.</div>') +
       `</div>`;
     grid.appendChild(bloco);
-    mi++;
-    cursor = new Date(y, m + 1, 1);
-  }
+  });
   area.appendChild(grid);
+}
+
+function diaGridHTML(y, m, doMes) {
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const firstWeekday = new Date(y, m, 1).getDay();
+  let html = '<div class="tl-cal">' + DIAS_PT.map(d => `<div class="tl-cal-wd">${d}</div>`).join('');
+  for (let i = 0; i < firstWeekday; i++) html += '<div class="tl-cal-day tl-cal-blank"></div>';
+  for (let d = 1; d <= lastDay; d++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const ativos = doMes.filter(it => it.inicio <= iso && it.termino >= iso);
+    const cls = ['tl-cal-day'];
+    if (ativos.length) cls.push('tl-cal-active');
+    if (doMes.some(it => it.inicio === iso)) cls.push('tl-cal-start');
+    if (doMes.some(it => it.termino === iso)) cls.push('tl-cal-end');
+    const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
+    html += `<div class="${cls.join(' ')}" title="${title}">${d}${ativos.length ? '<span class="tl-cal-dot"></span>' : ''}</div>`;
+  }
+  html += '</div>';
+  return html;
 }
 function fmtBr(iso) { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
 
@@ -858,6 +922,7 @@ el('rq').addEventListener('input', e => { RF.q = e.target.value; renderRoadmap()
 el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap(); });
 el('aRefreshBtn').addEventListener('click', () => { ISSUES = null; renderDash(); });
 el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
+document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
@@ -879,3 +944,4 @@ if (LIVE) {
 updateWho();
 go('home');
 boot();
+loadTimelineLive().then(() => { if (screen === 'linha') renderTimeline(); });
