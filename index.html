@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel DJUD — priorização e acompanhamento</title>
-<link rel="stylesheet" href="app.css">
+<!-- ?v= nos 4 arquivos abaixo é cache-busting: sem isso o navegador pode continuar
+     servindo uma versão antiga em cache depois de uma atualização publicada.
+     Bump ESTE número (junto nos 4) sempre que mexer em config.js/data.js/app.js/app.css. -->
+<link rel="stylesheet" href="app.css?v=20260924a">
 </head>
 <body>
 <header class="topbar">
@@ -220,8 +223,8 @@
   </div>
 </div>
 
-<script src="config.js"></script>
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="config.js?v=20260924a"></script>
+<script src="data.js?v=20260924a"></script>
+<script src="app.js?v=20260924a"></script>
 </body>
 </html>
