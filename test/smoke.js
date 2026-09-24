@@ -26,8 +26,9 @@ const PONTE = `window.__t = {
   get DATA(){return DATA}, set DATA(v){DATA=v},
   get store(){return store}, get auth(){return auth},
   LIVE, CAN_EDIT, COORDS, PRIOS, COMPS, STATUS, F, FA, TL,
-  normalize, go, renderBoard, renderDash, renderTimeline, openEdit, saveEdit, removeCard,
-  exportJson, exportCsv, exportTimelineJson, exportTimelineCsv, doLogin, forgetPass
+  normalize, go, renderBoard, renderDash, renderTimeline, renderAcompTabela, openEdit, saveEdit, removeCard,
+  exportJson, exportCsv, exportTimelineJson, exportTimelineCsv, exportAcompTabelaJson, exportAcompTabelaCsv,
+  doLogin, forgetPass
 };`;
 
 async function build({ sheetApi = '', storage = null, fetchImpl = null } = {}) {
@@ -138,6 +139,15 @@ async function demo() {
   t.FA.prio = '1'; await t.renderDash();
   ok(w.document.getElementById('dashArea').innerHTML.includes('(filtro ativo)'), 'dashboard respeita o filtro');
 
+  // tabela do Acompanhamento (mesma fonte da linha do tempo, mas sempre completa —
+  // não pode encolher por causa de uma busca deixada em TL.q por outra aba)
+  const linhasAntes = w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length;
+  ok(linhasAntes > 0, 'tabela do Acompanhamento renderiza as linhas');
+  t.TL.q = 'um texto que não bate com nenhum entregável';
+  t.renderAcompTabela();
+  eq(w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length, linhasAntes, 'tabela do Acompanhamento ignora a busca da Linha do tempo');
+  t.TL.q = '';
+
   // linha do tempo (TIMELINE_LIVE fica vazio no teste, cai no exemplo TIMELINE_DEMO)
   goto(t, 'linha');
   ok(w.document.querySelectorAll('#tlArea .tl-cal').length > 0, 'linha do tempo (calendário) renderiza os mini-calendários');
@@ -170,6 +180,12 @@ async function demo() {
   ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 6 colunas esperadas');
   const tlCsv = await downloads[3].text();
   ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url'), 'CSV da linha do tempo tem o cabeçalho esperado');
+
+  // exportar a tabela do Acompanhamento: mesmas 6 colunas, mas sempre a lista completa
+  t.exportAcompTabelaJson(); t.exportAcompTabelaCsv();
+  eq(downloads.length, 6, 'exportar a tabela do Acompanhamento gera mais 1 download JSON e 1 CSV');
+  const acJson = JSON.parse(await downloads[4].text());
+  eq(acJson.length, tlJson.length, 'export do Acompanhamento tem a mesma quantidade de linhas que o da Linha do tempo sem busca');
 }
 
 /* ============ NORMALIZE ============ */

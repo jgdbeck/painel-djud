@@ -343,6 +343,28 @@ async function renderDash() {
     <div class="panel"><h3>Execução por meta</h3><div class="hint">Percentual médio (aproximado) em cada meta do roadmap.</div>${barRows(byMeta)}</div></div>`;
 }
 
+/* Tabela para exportar e mandar ao coordenador: UID, entregável, início, término, % e URL.
+   Mesma fonte da Linha do tempo (TIMELINE_LIVE/TIMELINE_DEMO via filteredTimeline()), sem o
+   filtro de busca da aba Linha do tempo — aqui é sempre a lista completa. */
+function renderAcompTabela() {
+  const area = el('acompTabela');
+  const itens = timelineItens().slice().sort((a, b) => a.inicio.localeCompare(b.inicio));
+  if (!itens.length) { area.innerHTML = '<div class="empty">Nenhum entregável com início/término definidos no Project ainda.</div>'; return; }
+  area.innerHTML = `<div class="panel" style="overflow-x:auto">
+    <table class="acomp-tabela">
+      <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th></tr></thead>
+      <tbody>${itens.map(it => `<tr>
+        <td class="ghnum">#${esc(it.uid)}</td>
+        <td>${esc(it.entregavel)}</td>
+        <td>${fmtBr(it.inicio)}</td>
+        <td>${fmtBr(it.termino)}</td>
+        <td>${it.pct}%</td>
+        <td><a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a></td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
 /* ---------- navegação ---------- */
 /* ---------- plano de trabalho (aba plano: 1 linha por produto, estilo PDF) ---------- */
 function prazoKind(p){ return (typeof PRAZO_KIND!=='undefined' && PRAZO_KIND[p]) || 'adef'; }
@@ -601,10 +623,12 @@ async function loadTimelineLive() {
   return TIMELINE_LIVE;
 }
 
+function timelineItens() {
+  return (typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length) ? TIMELINE_LIVE : (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []);
+}
 function filteredTimeline() {
   const q = TL.q.toLowerCase();
-  const fonte = (typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length) ? TIMELINE_LIVE : (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []);
-  return fonte.filter(it => !q || it.entregavel.toLowerCase().includes(q));
+  return timelineItens().filter(it => !q || it.entregavel.toLowerCase().includes(q));
 }
 
 /* Cores dos blocos só decoram (não têm significado); ciclam pelas mesmas
@@ -795,7 +819,7 @@ function go(s) {
 }
 function refreshCurrent() {
   if (screen === 'demandas') renderBoard();
-  else if (screen === 'acomp') renderDash();
+  else if (screen === 'acomp') { renderDash(); renderAcompTabela(); }
   else if (screen === 'plano') renderPlano();
   else if (screen === 'roadmap') renderRoadmap();
   else if (screen === 'linha') renderTimeline();
@@ -905,19 +929,24 @@ function exportCsv() {
   dl('demandas_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
 
-/* export da Linha do tempo: UID, entregável, início, término, % e URL — respeita
-   a busca (tlq) já aplicada na tela, exporta o mesmo conjunto que está visível */
-function exportTimelineJson() {
-  const linhas = filteredTimeline().map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url }));
+/* export da linha do tempo: UID, entregável, início, término, % e URL — usado tanto
+   pela aba Linha do tempo (respeita a busca de lá) quanto pela tabela da aba
+   Acompanhamento (lista sempre completa, sem depender do filtro de outra tela) */
+function dlTimelineJson(itens) {
+  const linhas = itens.map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url }));
   dl('linha_do_tempo_djud.json', JSON.stringify(linhas, null, 1), 'application/json');
 }
-function exportTimelineCsv() {
+function dlTimelineCsv(itens) {
   const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url'];
   const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url']
-    .concat(filteredTimeline().map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
+    .concat(itens.map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
     .join('\n');
   dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
+function exportTimelineJson() { dlTimelineJson(filteredTimeline()); }
+function exportTimelineCsv() { dlTimelineCsv(filteredTimeline()); }
+function exportAcompTabelaJson() { dlTimelineJson(timelineItens()); }
+function exportAcompTabelaCsv() { dlTimelineCsv(timelineItens()); }
 
 function importFile(f) {
   const r = new FileReader();
@@ -1037,6 +1066,8 @@ el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline
 document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
+el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
+el('acompExpCsvBtn').addEventListener('click', exportAcompTabelaCsv);
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
