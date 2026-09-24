@@ -534,6 +534,61 @@ async function renderRoadmap() {
   area.appendChild(wrap);
 }
 
+/* ---------- linha do tempo (calendário de entregas, mês a mês) ----------
+   Lê TIMELINE_DEMO (data.js): dado de exemplo, calculado à mão a partir da fila real de
+   capacidade (2 analistas + 1 engenheiro de dados). Quando o Project do GitHub tiver os
+   campos de Start date / Target date / % Complete, isto passa a vir de lá. */
+const TL_GRUPO_LABEL = {
+  1: 'Em andamento', 2: 'Sem bloqueio de acesso', 3: 'Aguardam o teste do web service do SEI',
+  4: 'Dependem de outra entrega do painel', 5: 'Bloqueadas por acesso externo',
+};
+const TL = { q: '' };
+const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+function filteredTimeline() {
+  const q = TL.q.toLowerCase();
+  return (typeof TIMELINE_DEMO !== 'undefined' ? TIMELINE_DEMO : []).filter(it => !q || it.entregavel.toLowerCase().includes(q));
+}
+
+function renderTimeline() {
+  const area = el('tlArea');
+  const items = filteredTimeline();
+  el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com o GitHub</span>`;
+  area.innerHTML = '';
+  if (!items.length) { area.innerHTML = '<div class="empty">Nenhum entregável encontrado com esse filtro.</div>'; return; }
+
+  const inicios = items.map(it => new Date(it.inicio + 'T00:00:00'));
+  const terminos = items.map(it => new Date(it.termino + 'T00:00:00'));
+  let cursor = new Date(Math.min(...inicios)); cursor.setDate(1);
+  const fim = new Date(Math.max(...terminos));
+
+  while (cursor <= fim) {
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    const monthStart = new Date(y, m, 1), monthEnd = new Date(y, m + 1, 0);
+    const doMes = items.filter(it => new Date(it.inicio + 'T00:00:00') <= monthEnd && new Date(it.termino + 'T00:00:00') >= monthStart)
+      .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    const panel = document.createElement('div');
+    panel.className = 'panel tl-month';
+    panel.innerHTML = `<h3>${MESES_PT[m]} de ${y}</h3>` +
+      (doMes.length
+        ? doMes.map(it => {
+            const entregaEsteMs = it.termino >= monthStart.toISOString().slice(0, 10) && it.termino <= monthEnd.toISOString().slice(0, 10);
+            return `<div class="tl-row">
+              <span class="ghnum">#${esc(it.uid)}</span>
+              <a class="tl-title" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.entregavel)}</a>
+              <span class="tl-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
+              ${entregaEsteMs ? '<span class="stbadge" data-ghstate="closed">entrega neste mês</span>' : ''}
+              <span class="tl-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</span>
+              <span class="tl-pct">${it.pct}%</span>
+            </div>`;
+          }).join('')
+        : '<div class="hint">Nenhum entregável ativo neste mês.</div>');
+    area.appendChild(panel);
+    cursor = new Date(y, m + 1, 1);
+  }
+}
+function fmtBr(iso) { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
+
 function go(s) {
   screen = s;
   document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.screen === s));
@@ -542,6 +597,7 @@ function go(s) {
   el('scr-acomp').classList.toggle('hidden', s !== 'acomp');
   el('scr-plano').classList.toggle('hidden', s !== 'plano');
   el('scr-roadmap').classList.toggle('hidden', s !== 'roadmap');
+  el('scr-linha').classList.toggle('hidden', s !== 'linha');
   refreshCurrent();
 }
 function refreshCurrent() {
@@ -549,6 +605,7 @@ function refreshCurrent() {
   else if (screen === 'acomp') renderDash();
   else if (screen === 'plano') renderPlano();
   else if (screen === 'roadmap') renderRoadmap();
+  else if (screen === 'linha') renderTimeline();
   else renderHomeSummary();
 }
 
@@ -763,6 +820,7 @@ el('resetBtn').addEventListener('click', async () => {
 el('rfmeta').addEventListener('change', e => { RF.meta = e.target.value; renderRoadmap(); });
 el('rq').addEventListener('input', e => { RF.q = e.target.value; renderRoadmap(); });
 el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap(); });
+el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();
