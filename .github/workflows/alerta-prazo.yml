@@ -1,0 +1,118 @@
+name: Alerta de prazo por email
+
+# Roda uma vez por dia e avisa por email quando um entregável do Project está
+# a poucos dias do prazo (campo "Target date"). Lê o Project direto via
+# GraphQL, com o mesmo PROJECT_PAT do sync de status — não depende do
+# timeline-data.json, então funciona mesmo que aquele arquivo esteja
+# desatualizado.
+#
+# Precisa de dois secrets além do PROJECT_PAT (Settings > Secrets and
+# variables > Actions > New repository secret):
+#   MAIL_USERNAME  -> o endereço Gmail que vai enviar o alerta
+#   MAIL_PASSWORD  -> uma senha de app do Gmail (não a senha normal da conta;
+#                      precisa da verificação em duas etapas ativada:
+#                      https://myaccount.google.com/apppasswords)
+on:
+  schedule:
+    - cron: '0 11 * * *'   # 08:00 em America/Sao_Paulo (UTC-3), todo dia
+  workflow_dispatch: {}
+
+jobs:
+  alerta:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ler o Project e montar o alerta
+        id: alerta
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const OWNER = 'jgdbeck';
+            const REPO = 'painel-djud';
+            const PROJECT_NUMBER = 1;
+            // Acrescente outros números (ex.: [7, 3, 1]) para mais de um aviso por entregável.
+            const DIAS_ANTES = [7];
+
+            async function fetchItems() {
+              let items = [];
+              let cursor = null;
+              for (;;) {
+                const res = await github.graphql(
+                  `query($login:String!, $number:Int!, $cursor:String) {
+                    user(login:$login) {
+                      projectV2(number:$number) {
+                        items(first:100, after:$cursor) {
+                          pageInfo { hasNextPage endCursor }
+                          nodes {
+                            termino: fieldValueByName(name:"Target date") {
+                              ... on ProjectV2ItemFieldDateValue { date }
+                            }
+                            content {
+                              __typename
+                              ... on Issue {
+                                number
+                                title
+                                url
+                                repository { name owner { login } }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }`,
+                  { login: OWNER, number: PROJECT_NUMBER, cursor }
+                );
+                const conn = res.user.projectV2.items;
+                items = items.concat(conn.nodes);
+                if (!conn.pageInfo.hasNextPage) break;
+                cursor = conn.pageInfo.endCursor;
+              }
+              return items;
+            }
+
+            const hoje = new Date().toISOString().slice(0, 10);
+            function somarDias(iso, n) {
+              const d = new Date(iso + 'T00:00:00Z');
+              d.setUTCDate(d.getUTCDate() + n);
+              return d.toISOString().slice(0, 10);
+            }
+
+            const items = await fetchItems();
+            const achados = [];
+            for (const item of items) {
+              const c = item.content;
+              if (!c || c.__typename !== 'Issue') continue;
+              if (c.repository.owner.login !== OWNER || c.repository.name !== REPO) continue;
+              if (!item.termino || !item.termino.date) continue;
+              for (const dias of DIAS_ANTES) {
+                if (somarDias(hoje, dias) === item.termino.date) {
+                  achados.push({ dias, numero: c.number, titulo: c.title, url: c.url, termino: item.termino.date });
+                  break;
+                }
+              }
+            }
+
+            if (!achados.length) {
+              core.info('Nenhum prazo a avisar hoje.');
+              core.setOutput('tem_alerta', 'false');
+            } else {
+              achados.sort((a, b) => a.dias - b.dias);
+              const linhas = achados.map(a => `#${a.numero} ${a.titulo}\nPrazo: ${a.termino} (em ${a.dias} dia${a.dias === 1 ? '' : 's'})\n${a.url}\n`);
+              core.setOutput('tem_alerta', 'true');
+              core.setOutput('assunto', `Painel DJUD: ${achados.length} prazo${achados.length === 1 ? '' : 's'} se aproximando`);
+              core.setOutput('corpo', linhas.join('\n'));
+            }
+
+      - name: Enviar o email
+        if: steps.alerta.outputs.tem_alerta == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ${{ steps.alerta.outputs.assunto }}
+          to: jgdbeck@gmail.com
+          from: Painel DJUD <${{ secrets.MAIL_USERNAME }}>
+          body: ${{ steps.alerta.outputs.corpo }}

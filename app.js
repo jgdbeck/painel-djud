@@ -261,12 +261,27 @@ function barRows(gs) {
   return gs.map(g => `<div class="brow"><div class="bl">${g.dot ? `<span class="dotp" style="background:${g.dot}"></span>` : ''}${esc(g.label)}</div><div class="bt"><span style="width:${g.pct}%"></span></div><div class="bv"><b>${g.pct}%</b> · ${g.n} dem.</div></div>`).join('');
 }
 
-function renderHomeSummary() {
-  const n = DATA.length, exec = avg(DATA.map(c => c.pct));
-  const con = DATA.filter(c => c.status === 'Concluída').length;
-  const and = DATA.filter(c => c.status === 'Em andamento').length;
-  const byCoord = COORDS.map(co => { const g = DATA.filter(c => c.coord === co.full); return { label: co.short, dot: co.dot, n: g.length, pct: avg(g.map(c => c.pct)) }; });
-  el('homeSummary').innerHTML = `
+/* Início lê as issues do GitHub, igual ao Acompanhamento — não mais a planilha de
+   demandas (o "em andamento" ficava sempre zerado ali, porque aquele status só é
+   marcado manualmente a partir do % executado na aba Demandas, que ninguém mais
+   edita desde que o acompanhamento real passou a ser pelas labels do GitHub). */
+async function renderHomeSummary() {
+  const area = el('homeSummary');
+  if (!ISSUES && !issuesLoading) {
+    issuesLoading = true;
+    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    try { ISSUES = await fetchIssues(); }
+    catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
+    issuesLoading = false;
+    if (screen !== 'home') return;
+  }
+  if (issuesLoading) return;
+  const items = ISSUES || [];
+  const n = items.length, exec = avg(items.map(ghPct));
+  const con = items.filter(iss => ghColumn(iss) === 'Finalizado' || ghColumn(iss) === 'Registrado no relatório').length;
+  const and = items.filter(iss => ghColumn(iss) === 'Em andamento').length;
+  const byMeta = METAS.map(meta => { const g = items.filter(iss => ghMeta(iss.labels) === meta); return { label: meta.replace(/^Meta \d: /, ''), n: g.length, pct: avg(g.map(ghPct)) }; });
+  area.innerHTML = `
     <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px">
       <div>${ringSVG(exec)}</div>
       <div style="display:grid;grid-template-columns:repeat(3,auto);gap:8px 22px">
@@ -275,8 +290,8 @@ function renderHomeSummary() {
         <div><div class="big tabular" style="font-size:26px;font-weight:800;color:var(--st-and)">${and}</div><div class="lab" style="color:var(--muted);font-size:12px">em andamento</div></div>
       </div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 4px">Execução por coordenação</div>
-    ${barRows(byCoord)}`;
+    <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 4px">Execução por meta</div>
+    ${barRows(byMeta)}`;
 }
 
 /* Acompanhamento lê as issues do GitHub (mesma fonte do Roadmap), não mais a planilha de
