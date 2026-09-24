@@ -761,7 +761,7 @@ function renderTimelineCalendario(area, items) {
     bloco.className = 'tl-block';
     bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
     bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
-      `<div class="tl-block-body">` + calGridHTML(y, m, doMes, mapaCores) + calLegendHTML(doMes, mapaCores, semEntregavelTexto) + `</div>`;
+      `<div class="tl-block-body">` + calGridHTML(y, m, doMes, mapaCores, TL.foco) + calLegendHTML(doMes, mapaCores, semEntregavelTexto) + `</div>`;
     grid.appendChild(bloco);
     // ao passar o mouse no entregável, marca os dias do prazo dele no mini-calendário
     bloco.querySelectorAll('.tl-cal-item').forEach(row => {
@@ -785,14 +785,16 @@ const DIAS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 /* Cada dia com entregável ativo já sai marcado (uma tarja colorida por entregável,
    até 4) — sem precisar passar o mouse. O hover no nome só reforça: marca com
    um contorno na cor daquele entregável os dias exatos do prazo dele. */
-function calGridHTML(y, m, doMes, mapaCores) {
+/* No foco "Entrega" o dia marcado é só o do término — não faz sentido pintar o
+   mês inteiro de trabalho quando o que importa aqui é a data de entrega. */
+function calGridHTML(y, m, doMes, mapaCores, foco) {
   const lastDay = new Date(y, m + 1, 0).getDate();
   const firstWeekday = new Date(y, m, 1).getDay();
   let html = '<div class="tl-cal">' + DIAS_PT.map(d => `<div class="tl-cal-wd">${d}</div>`).join('');
   for (let i = 0; i < firstWeekday; i++) html += '<div class="tl-cal-day tl-cal-blank"></div>';
   for (let d = 1; d <= lastDay; d++) {
     const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const ativos = doMes.filter(it => it.inicio <= iso && it.termino >= iso);
+    const ativos = foco === 'entrega' ? doMes.filter(it => it.termino === iso) : doMes.filter(it => it.inicio <= iso && it.termino >= iso);
     const uids = ativos.map(it => it.uid).join(' ');
     const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
     const barras = ativos.slice(0, 4).map(it => `<span style="background:${mapaCores.get(it.uid)}"></span>`).join('');

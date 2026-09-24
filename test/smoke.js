@@ -154,9 +154,12 @@ async function demo() {
   ok(w.document.querySelectorAll('#tlArea .tl-cal').length > 0, 'linha do tempo (calendário) renderiza os mini-calendários');
   ok(w.document.querySelectorAll('#tlArea .tl-cal-item').length > 0, 'linha do tempo (calendário) lista os entregáveis na legenda');
   const itensAndamento = w.document.querySelectorAll('#tlArea .tl-cal-item').length;
+  const diasAndamento = w.document.querySelectorAll('#tlArea .tl-cal-active').length;
   t.TL.foco = 'entrega'; t.renderTimeline();
   const itensEntrega = w.document.querySelectorAll('#tlArea .tl-cal-item').length;
+  const diasEntrega = w.document.querySelectorAll('#tlArea .tl-cal-active').length;
   ok(itensEntrega < itensAndamento, 'foco "Entrega" mostra menos itens por mês que "Em andamento" (só quem termina naquele mês)');
+  ok(diasEntrega < diasAndamento, 'foco "Entrega" marca só o dia do término no mini-calendário, não o período inteiro');
   t.TL.foco = 'andamento'; t.renderTimeline();
   t.TL.view = 'lista'; t.renderTimeline();
   ok(w.document.querySelectorAll('#tlArea .tl-row').length > 0, 'linha do tempo (lista) renderiza as linhas por entregável');
