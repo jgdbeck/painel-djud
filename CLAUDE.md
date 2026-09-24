@@ -17,6 +17,8 @@ A static, build-free panel for prioritizing and tracking DJUD's data demands (ju
 
 Scripts are **classic, not modules** — deliberately, so `file://` keeps working. Load order (`config` → `data` → `app`) matters.
 
+`index.html` loads all four (`app.css`, `config.js`, `data.js`, `app.js`) with a `?v=YYYYMMDDx` query string for cache-busting — browsers otherwise keep serving a stale cached copy after a deploy. **Bump that version (the same value on all four tags) whenever any of those four files changes**, or the update won't show up for users without a hard refresh.
+
 ## Running and testing
 
 ```bash
