@@ -18,10 +18,17 @@ name: Sincronizar status e prazos do Project
 #      do Status (Backlog/Parado = 0%, Em andamento = 50%, Finalizado ou
 #      Registrado no relatório = 100%) — crie o campo com esse nome exato
 #      no Project quando quiser um % de verdade em vez da aproximação.
-#   4. publica também "notas": o texto do último comentário da issue (se
-#      houver), cortado em 400 caracteres. É a coluna Notas da tabela do
-#      Acompanhamento — a ideia é usar o próprio comentário mais recente da
-#      issue como observação, sem precisar de outro campo no Project.
+#   4. publica também "notas": um registro de TODOS os comentários da issue
+#      (até os 15 mais recentes), cada um com a data, tipo "[10/09/2026]
+#      texto do comentário...". É a coluna Notas da tabela do Acompanhamento
+#      — a ideia é ir acumulando o que for comentado na task ao longo do
+#      tempo, não só o último comentário.
+#   5. se o Project tiver um campo de texto chamado "URL do entregável", o
+#      valor dele vira o "url" publicado (o link do produto de verdade —
+#      painel, planilha etc). Sem esse campo (ou sem valor numa issue), cai
+#      no link da própria issue no GitHub, como já era. Crie o campo com
+#      esse nome exato no Project (workflow "Criar campo no Project", tipo
+#      TEXT) quando quiser passar a apontar pro produto em vez da issue.
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -69,6 +76,9 @@ jobs:
                             }
                             pct: fieldValueByName(name:"% Complete") {
                               ... on ProjectV2ItemFieldNumberValue { number }
+                            }
+                            urlCampo: fieldValueByName(name:"URL do entregável") {
+                              ... on ProjectV2ItemFieldTextValue { text }
                             }
                             content {
                               __typename
@@ -118,18 +128,25 @@ jobs:
               }
 
               if (item.inicio && item.inicio.date && item.termino && item.termino.date) {
+                const urlCampo = item.urlCampo && item.urlCampo.text && item.urlCampo.text.trim();
                 const registro = {
                   uid: String(c.number),
                   entregavel: c.title,
                   inicio: item.inicio.date,
                   termino: item.termino.date,
                   status: desired,
-                  url: c.url,
+                  url: urlCampo || c.url,
                 };
                 if (item.pct && typeof item.pct.number === 'number') registro.pct = Math.max(0, Math.min(100, Math.round(item.pct.number)));
                 try {
                   const { data: comentarios } = await github.rest.issues.listComments({ owner: OWNER, repo: REPO, issue_number: c.number, per_page: 100 });
-                  if (comentarios.length) registro.notas = comentarios[comentarios.length - 1].body.replace(/\s+/g, ' ').trim().slice(0, 400);
+                  if (comentarios.length) {
+                    registro.notas = comentarios.slice(-15).map(cm => {
+                      const [ano, mes, dia] = cm.created_at.slice(0, 10).split('-');
+                      const texto = cm.body.replace(/\s+/g, ' ').trim().slice(0, 200);
+                      return `[${dia}/${mes}/${ano}] ${texto}`;
+                    }).join('\n');
+                  }
                 } catch (e) { core.warning(`ler comentários da #${c.number}: ${e.message}`); }
                 timeline.push(registro);
               }
