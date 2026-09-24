@@ -587,14 +587,16 @@ const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'J
    tiver os dois campos preenchidos no Project, ela não entra nesse arquivo — por
    isso TIMELINE_DEMO continua servindo de exemplo/plano de fundo até o Project
    estar totalmente preenchido. Busca é best-effort: falha em silêncio (inclusive
-   em file://, onde fetch de arquivo local é bloqueado) e cai no exemplo. */
+   em file://, onde fetch de arquivo local é bloqueado) e cai no exemplo. O % vem
+   do campo "% Complete" do Project quando ele existir; sem esse campo, o workflow
+   não manda "pct" e aqui cai na aproximação por Status (GH_PCT). */
 let TIMELINE_LIVE = null;
 async function loadTimelineLive() {
   try {
     const r = await fetch('timeline-data.json');
     if (!r.ok) throw new Error('sem timeline-data.json');
     const list = await r.json();
-    TIMELINE_LIVE = list.map(it => ({ ...it, pct: GH_PCT[it.status] ?? 0 }));
+    TIMELINE_LIVE = list.map(it => ({ ...it, pct: typeof it.pct === 'number' ? it.pct : (GH_PCT[it.status] ?? 0) }));
   } catch (e) { TIMELINE_LIVE = []; }
   return TIMELINE_LIVE;
 }
@@ -903,6 +905,20 @@ function exportCsv() {
   dl('demandas_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
 
+/* export da Linha do tempo: UID, entregável, início, término, % e URL — respeita
+   a busca (tlq) já aplicada na tela, exporta o mesmo conjunto que está visível */
+function exportTimelineJson() {
+  const linhas = filteredTimeline().map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url }));
+  dl('linha_do_tempo_djud.json', JSON.stringify(linhas, null, 1), 'application/json');
+}
+function exportTimelineCsv() {
+  const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url'];
+  const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url']
+    .concat(filteredTimeline().map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
+    .join('\n');
+  dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
+}
+
 function importFile(f) {
   const r = new FileReader();
   r.onload = async () => {
@@ -1019,6 +1035,8 @@ el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap
 el('aRefreshBtn').addEventListener('click', () => { ISSUES = null; renderDash(); });
 el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
 document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
+el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
+el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
 el('fsBtn').addEventListener('click', () => {
   if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
   else document.exitFullscreen?.();

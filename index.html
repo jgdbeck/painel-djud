@@ -130,7 +130,7 @@
 <main class="wrap hidden" id="scr-linha">
   <div class="plano-title">
     <h1>Linha do tempo</h1>
-    <p>Uma linha por entregável, com UID, início, término e % — organizada por mês. Dado de exemplo por enquanto; ainda não vem do GitHub.</p>
+    <p>Uma linha por entregável, com UID, início, término e % — organizada por mês. Vem do Project do GitHub quando o entregável tem início e término definidos lá; senão, usa o exemplo do cronograma.</p>
   </div>
   <div class="controls">
     <div class="seg" id="tlView" role="group" aria-label="Visualização">
@@ -139,6 +139,8 @@
     </div>
     <input id="tlq" class="input" type="search" placeholder="Buscar entregável…" style="width:220px">
     <div class="spacer"></div>
+    <button class="btn" id="tlExpJsonBtn">Exportar JSON</button>
+    <button class="btn" id="tlExpCsvBtn" title="Para abrir no Excel">Exportar CSV</button>
   </div>
   <div class="legend" id="tlLegend"></div>
   <div id="tlArea"></div>
