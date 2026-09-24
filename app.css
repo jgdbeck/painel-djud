@@ -258,6 +258,8 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .tl-cal-active{color:var(--ink);font-weight:700}
 .tl-cal-day-bars{position:absolute;left:3px;right:3px;bottom:3px;display:flex;gap:1px;height:3px}
 .tl-cal-day-bars span{flex:1;border-radius:2px;min-width:2px;box-shadow:0 0 0 1px rgba(27,36,48,.18)}
+/* foco "Entrega": contorna o quadro do dia inteiro, não só a tarjinha embaixo */
+.tl-cal-day-entrega{box-shadow:0 0 0 2px var(--st-con) inset;background:var(--st-con-bg)}
 .tl-cal-day-hl{box-shadow:0 0 0 2px var(--hl-cor,#1B2430) inset}
 
 /* legenda dos entregáveis do mês, logo abaixo do mini-calendário */

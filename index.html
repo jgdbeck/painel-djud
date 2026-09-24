@@ -7,7 +7,7 @@
 <!-- ?v= nos 4 arquivos abaixo é cache-busting: sem isso o navegador pode continuar
      servindo uma versão antiga em cache depois de uma atualização publicada.
      Bump ESTE número (junto nos 4) sempre que mexer em config.js/data.js/app.js/app.css. -->
-<link rel="stylesheet" href="app.css?v=20260924d">
+<link rel="stylesheet" href="app.css?v=20260924e">
 </head>
 <body>
 <header class="topbar">
@@ -156,6 +156,8 @@
       <button data-tlfoco="andamento" aria-pressed="true">Em andamento</button>
       <button data-tlfoco="entrega" aria-pressed="false">Entrega</button>
     </div>
+    <!-- os <option> são gerados em fillTimelineAnoSelect(), a partir dos dados carregados -->
+    <select id="tlAno" class="select" aria-label="Filtrar por ano"></select>
     <input id="tlq" class="input" type="search" placeholder="Buscar entregável…" style="width:220px">
     <div class="spacer"></div>
     <button class="btn" id="tlExpJsonBtn">Exportar JSON</button>
@@ -223,8 +225,8 @@
   </div>
 </div>
 
-<script src="config.js?v=20260924d"></script>
-<script src="data.js?v=20260924d"></script>
-<script src="app.js?v=20260924d"></script>
+<script src="config.js?v=20260924e"></script>
+<script src="data.js?v=20260924e"></script>
+<script src="app.js?v=20260924e"></script>
 </body>
 </html>
