@@ -124,10 +124,16 @@ async function demo() {
   eq(t.DATA.length, 35, 'excluir remove de DATA');
   eq(JSON.parse(w.localStorage.getItem('djud_demandas_v3')).length, 35, 'exclusão persistiu');
 
-  // dashboard
+  // dashboard (Acompanhamento lê issues do GitHub, não DATA — precisa da API simulada)
+  const FAKE_ISSUES = [
+    { number: 1, title: 'A', labels: [{ name: 'Meta 1: Estruturação e governança de dados' }, { name: 'Prioridade 1' }, { name: 'Complexidade Baixa' }, { name: 'Backlog' }], assignees: [] },
+    { number: 2, title: 'B', labels: [{ name: 'Meta 2: Analytics descritivo (painéis)' }, { name: 'Prioridade 2' }, { name: 'Complexidade Média' }, { name: 'Em andamento' }], assignees: [] },
+  ];
+  w.fetch = async () => ({ ok: true, json: async () => FAKE_ISSUES });
   goto(t, 'acomp');
+  await tick(); await tick(); await tick();
   ok(w.document.getElementById('dashArea').innerHTML.includes('Execução geral'), 'dashboard renderiza');
-  t.FA.prio = '1'; t.renderDash();
+  t.FA.prio = '1'; await t.renderDash();
   ok(w.document.getElementById('dashArea').innerHTML.includes('(filtro ativo)'), 'dashboard respeita o filtro');
 
   // exportar: dois botões separados, um download cada
