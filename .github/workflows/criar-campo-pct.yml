@@ -21,21 +21,24 @@ jobs:
             const PROJECT_NUMBER = 1;
             const NOME_CAMPO = '% Complete';
 
+            // field(name:"...") dá erro (não null) quando o campo não existe, então a
+            // checagem precisa listar todos os campos e procurar pelo nome do lado de cá.
             const res = await github.graphql(
               `query($login:String!, $number:Int!) {
                 user(login:$login) {
                   projectV2(number:$number) {
                     id
-                    campo: field(name:"${NOME_CAMPO}") { ... on ProjectV2FieldCommon { id name } }
+                    fields(first:100) { nodes { ... on ProjectV2FieldCommon { id name } } }
                   }
                 }
               }`,
               { login: OWNER, number: PROJECT_NUMBER }
             );
             const proj = res.user.projectV2;
+            const existente = proj.fields.nodes.find(f => f && f.name === NOME_CAMPO);
 
-            if (proj.campo) {
-              core.info(`Campo "${NOME_CAMPO}" já existe (id ${proj.campo.id}). Nada a fazer.`);
+            if (existente) {
+              core.info(`Campo "${NOME_CAMPO}" já existe (id ${existente.id}). Nada a fazer.`);
               return;
             }
 
