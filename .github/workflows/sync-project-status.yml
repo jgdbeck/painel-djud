@@ -12,6 +12,12 @@ name: Sincronizar status e prazos do Project
 #      Linha do tempo do painel busca (mesma origem, sem login). Crie esses
 #      dois campos de data no Project com esses nomes exatos; uma issue sem
 #      os dois preenchidos simplesmente não entra no arquivo.
+#   3. se o Project também tiver um campo numérico chamado "% Complete", o
+#      valor dele vai junto em timeline-data.json como "pct". Sem esse campo
+#      (ou sem valor numa issue), o painel calcula um % aproximado a partir
+#      do Status (Backlog/Parado = 0%, Em andamento = 50%, Finalizado ou
+#      Registrado no relatório = 100%) — crie o campo com esse nome exato
+#      no Project quando quiser um % de verdade em vez da aproximação.
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -56,6 +62,9 @@ jobs:
                             }
                             termino: fieldValueByName(name:"Target date") {
                               ... on ProjectV2ItemFieldDateValue { date }
+                            }
+                            pct: fieldValueByName(name:"% Complete") {
+                              ... on ProjectV2ItemFieldNumberValue { number }
                             }
                             content {
                               __typename
@@ -105,14 +114,16 @@ jobs:
               }
 
               if (item.inicio && item.inicio.date && item.termino && item.termino.date) {
-                timeline.push({
+                const registro = {
                   uid: String(c.number),
                   entregavel: c.title,
                   inicio: item.inicio.date,
                   termino: item.termino.date,
                   status: desired,
                   url: c.url,
-                });
+                };
+                if (item.pct && typeof item.pct.number === 'number') registro.pct = Math.max(0, Math.min(100, Math.round(item.pct.number)));
+                timeline.push(registro);
               }
             }
             core.info(`${items.length} itens do Project lidos, ${changed} ajuste(s) de label aplicado(s), ${timeline.length} com início/término definidos.`);
