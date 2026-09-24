@@ -64,7 +64,14 @@ async function demo() {
   ok(t.CAN_EDIT(), 'pode editar no modo demo');
   eq(w.document.getElementById('modeBadge').textContent, 'Modo demonstração', 'badge de modo');
 
-  // home
+  // home (Início lê issues do GitHub, não DATA — precisa da API simulada)
+  const FAKE_ISSUES = [
+    { number: 1, title: 'A', labels: [{ name: 'Meta 1: Estruturação e governança de dados' }, { name: 'Prioridade 1' }, { name: 'Complexidade Baixa' }, { name: 'Backlog' }], assignees: [] },
+    { number: 2, title: 'B', labels: [{ name: 'Meta 2: Analytics descritivo (painéis)' }, { name: 'Prioridade 2' }, { name: 'Complexidade Média' }, { name: 'Em andamento' }], assignees: [] },
+  ];
+  w.fetch = async () => ({ ok: true, json: async () => FAKE_ISSUES });
+  t.go('home');
+  await tick(); await tick(); await tick();
   ok(w.document.getElementById('homeSummary').innerHTML.includes('iniciativas'), 'home renderiza o panorama');
 
   // board
@@ -124,12 +131,7 @@ async function demo() {
   eq(t.DATA.length, 35, 'excluir remove de DATA');
   eq(JSON.parse(w.localStorage.getItem('djud_demandas_v3')).length, 35, 'exclusão persistiu');
 
-  // dashboard (Acompanhamento lê issues do GitHub, não DATA — precisa da API simulada)
-  const FAKE_ISSUES = [
-    { number: 1, title: 'A', labels: [{ name: 'Meta 1: Estruturação e governança de dados' }, { name: 'Prioridade 1' }, { name: 'Complexidade Baixa' }, { name: 'Backlog' }], assignees: [] },
-    { number: 2, title: 'B', labels: [{ name: 'Meta 2: Analytics descritivo (painéis)' }, { name: 'Prioridade 2' }, { name: 'Complexidade Média' }, { name: 'Em andamento' }], assignees: [] },
-  ];
-  w.fetch = async () => ({ ok: true, json: async () => FAKE_ISSUES });
+  // dashboard (Acompanhamento lê issues do GitHub, mesma API simulada já usada pelo Início; ISSUES já está em cache)
   goto(t, 'acomp');
   await tick(); await tick(); await tick();
   ok(w.document.getElementById('dashArea').innerHTML.includes('Execução geral'), 'dashboard renderiza');
