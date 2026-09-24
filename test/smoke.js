@@ -25,8 +25,8 @@ const tick = () => new Promise(r => setTimeout(r, 0));
 const PONTE = `window.__t = {
   get DATA(){return DATA}, set DATA(v){DATA=v},
   get store(){return store}, get auth(){return auth},
-  LIVE, CAN_EDIT, COORDS, PRIOS, COMPS, STATUS, F, FA,
-  normalize, go, renderBoard, renderDash, openEdit, saveEdit, removeCard,
+  LIVE, CAN_EDIT, COORDS, PRIOS, COMPS, STATUS, F, FA, TL,
+  normalize, go, renderBoard, renderDash, renderTimeline, openEdit, saveEdit, removeCard,
   exportJson, exportCsv, doLogin, forgetPass
 };`;
 
@@ -137,6 +137,14 @@ async function demo() {
   ok(w.document.getElementById('dashArea').innerHTML.includes('Execução geral'), 'dashboard renderiza');
   t.FA.prio = '1'; await t.renderDash();
   ok(w.document.getElementById('dashArea').innerHTML.includes('(filtro ativo)'), 'dashboard respeita o filtro');
+
+  // linha do tempo (TIMELINE_LIVE fica vazio no teste, cai no exemplo TIMELINE_DEMO)
+  goto(t, 'linha');
+  ok(w.document.querySelectorAll('#tlArea .tl-cal').length > 0, 'linha do tempo (calendário) renderiza os mini-calendários');
+  ok(w.document.querySelectorAll('#tlArea .tl-cal-item').length > 0, 'linha do tempo (calendário) lista os entregáveis na legenda');
+  t.TL.view = 'lista'; t.renderTimeline();
+  ok(w.document.querySelectorAll('#tlArea .tl-row').length > 0, 'linha do tempo (lista) renderiza as linhas por entregável');
+  t.TL.view = 'calendario'; t.renderTimeline();
 
   // exportar: dois botões separados, um download cada
   goto(t, 'demandas');
