@@ -616,12 +616,18 @@ const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'J
 let TIMELINE_LIVE = null;
 async function loadTimelineLive() {
   try {
-    const r = await fetch('timeline-data.json');
+    const r = await fetch('timeline-data.json', { cache: 'no-store' }); // sem isso o navegador podia servir uma versão velha
     if (!r.ok) throw new Error('sem timeline-data.json');
     const list = await r.json();
     TIMELINE_LIVE = list.map(it => ({ ...it, pct: typeof it.pct === 'number' ? it.pct : (GH_PCT[it.status] ?? 0) }));
   } catch (e) { TIMELINE_LIVE = []; }
   return TIMELINE_LIVE;
+}
+async function refreshTimelineLive() {
+  TIMELINE_LIVE = null;
+  el('tlArea').innerHTML = '<div class="loading">Atualizando a partir do GitHub…</div>';
+  await loadTimelineLive();
+  renderTimeline();
 }
 
 function timelineItens() {
@@ -1097,6 +1103,7 @@ el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline
 document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
 document.querySelectorAll('#tlFoco button').forEach(b => b.addEventListener('click', () => { TL.foco = b.dataset.tlfoco; renderTimeline(); }));
 el('tlAno').addEventListener('change', e => { TL.ano = e.target.value; renderTimeline(); });
+el('tlRefreshBtn').addEventListener('click', refreshTimelineLive);
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
