@@ -257,14 +257,14 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .tl-cal-blank{visibility:hidden}
 .tl-cal-active{color:var(--ink);font-weight:700}
 .tl-cal-day-bars{position:absolute;left:3px;right:3px;bottom:3px;display:flex;gap:1px;height:3px}
-.tl-cal-day-bars span{flex:1;border-radius:2px;min-width:2px}
+.tl-cal-day-bars span{flex:1;border-radius:2px;min-width:2px;box-shadow:0 0 0 1px rgba(27,36,48,.18)}
 .tl-cal-day-hl{box-shadow:0 0 0 2px var(--hl-cor,#1B2430) inset}
 
 /* legenda dos entregáveis do mês, logo abaixo do mini-calendário */
 .tl-cal-legend{display:flex;flex-direction:column;gap:2px}
 .tl-cal-item{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:8px;text-decoration:none;color:var(--ink)}
 .tl-cal-item:hover{background:var(--page)}
-.tl-cal-item-dot{width:9px;height:9px;border-radius:50%;background:var(--cor);flex:none}
+.tl-cal-item-dot{width:9px;height:9px;border-radius:50%;background:var(--cor);flex:none;box-shadow:0 0 0 1px rgba(27,36,48,.18)}
 .tl-cal-item-tit{flex:1;min-width:0;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tl-cal-item-dias{font-size:10.5px;color:var(--muted);white-space:nowrap}
 
