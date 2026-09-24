@@ -7,7 +7,7 @@
 <!-- ?v= nos 4 arquivos abaixo é cache-busting: sem isso o navegador pode continuar
      servindo uma versão antiga em cache depois de uma atualização publicada.
      Bump ESTE número (junto nos 4) sempre que mexer em config.js/data.js/app.js/app.css. -->
-<link rel="stylesheet" href="app.css?v=20260924f">
+<link rel="stylesheet" href="app.css?v=20260924g">
 </head>
 <body>
 <header class="topbar">
@@ -160,6 +160,7 @@
     <select id="tlAno" class="select" aria-label="Filtrar por ano"></select>
     <input id="tlq" class="input" type="search" placeholder="Buscar entregável…" style="width:220px">
     <div class="spacer"></div>
+    <button class="btn" id="tlRefreshBtn">↻ Atualizar</button>
     <button class="btn" id="tlExpJsonBtn">Exportar JSON</button>
     <button class="btn" id="tlExpCsvBtn" title="Para abrir no Excel">Exportar CSV</button>
   </div>
@@ -225,8 +226,8 @@
   </div>
 </div>
 
-<script src="config.js?v=20260924f"></script>
-<script src="data.js?v=20260924f"></script>
-<script src="app.js?v=20260924f"></script>
+<script src="config.js?v=20260924g"></script>
+<script src="data.js?v=20260924g"></script>
+<script src="app.js?v=20260924g"></script>
 </body>
 </html>

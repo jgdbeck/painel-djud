@@ -26,7 +26,7 @@ const PONTE = `window.__t = {
   get DATA(){return DATA}, set DATA(v){DATA=v},
   get store(){return store}, get auth(){return auth},
   LIVE, CAN_EDIT, COORDS, PRIOS, COMPS, STATUS, F, FA, TL,
-  normalize, go, renderBoard, renderDash, renderTimeline, renderAcompTabela, openEdit, saveEdit, removeCard,
+  normalize, go, renderBoard, renderDash, renderTimeline, renderAcompTabela, refreshTimelineLive, openEdit, saveEdit, removeCard,
   exportJson, exportCsv, exportTimelineJson, exportTimelineCsv, exportAcompTabelaJson, exportAcompTabelaCsv,
   doLogin, forgetPass
 };`;
@@ -177,6 +177,20 @@ async function demo() {
   t.TL.view = 'lista'; t.renderTimeline();
   ok(w.document.querySelectorAll('#tlArea .tl-row').length > 0, 'linha do tempo (lista) renderiza as linhas por entregável');
   t.TL.view = 'calendario'; t.renderTimeline();
+
+  // botão Atualizar: busca timeline-data.json de novo (sem cache) e re-renderiza com o que vier
+  const fetchAntes = w.fetch;
+  let pediuSemCache = false;
+  const TIMELINE_FAKE = [{ uid: '999', entregavel: 'Entregável de teste do refresh', inicio: '2030-01-01', termino: '2030-01-15', status: 'Backlog', url: 'https://github.com/jgdbeck/painel-djud/issues/999' }];
+  w.fetch = async (url, opts) => {
+    if (String(url).includes('timeline-data.json')) { pediuSemCache = opts && opts.cache === 'no-store'; return { ok: true, json: async () => TIMELINE_FAKE }; }
+    return fetchAntes(url, opts);
+  };
+  await t.refreshTimelineLive();
+  ok(pediuSemCache, 'botão Atualizar busca timeline-data.json com cache:"no-store"');
+  ok(w.document.getElementById('tlArea').innerHTML.includes('999'), 'botão Atualizar troca os dados na tela pelos que acabaram de vir');
+  w.fetch = fetchAntes;
+  t.TL.ano = '';
 
   // exportar: dois botões separados, um download cada
   goto(t, 'demandas');
