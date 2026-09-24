@@ -1,26 +1,36 @@
-name: Sincronizar status do Project nas labels
+name: Sincronizar status e prazos do Project
 
-# O painel (Roadmap) lê issues pela API pública, que não enxerga o campo
-# "Status" do Project (isso exige login). Este workflow é a ponte: lê o
-# Project via GraphQL (precisa do PROJECT_PAT — um token clássico com os
-# escopos "repo" e "project"; o fine-grained não expõe permissão de
-# Projects para conta pessoal, só para organização) e espelha o Status
-# de cada item numa label da issue correspondente — a mesma label que
-# o Roadmap usa pra decidir a coluna.
+# O painel (Roadmap) lê issues pela API pública, que não enxerga os campos
+# do Project (isso exige login). Este workflow é a ponte: lê o Project via
+# GraphQL (precisa do PROJECT_PAT — um token clássico com os escopos "repo"
+# e "project"; o fine-grained não expõe permissão de Projects para conta
+# pessoal, só para organização) e:
+#   1. espelha o Status de cada item numa label da issue correspondente —
+#      a mesma label que o Roadmap usa pra decidir a coluna;
+#   2. publica início/término em timeline-data.json, a partir dos campos
+#      "Start date" e "Target date" do Project — é esse arquivo que a aba
+#      Linha do tempo do painel busca (mesma origem, sem login). Crie esses
+#      dois campos de data no Project com esses nomes exatos; uma issue sem
+#      os dois preenchidos simplesmente não entra no arquivo.
 on:
   schedule:
     - cron: '*/20 * * * *'
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Ler o Project e ajustar as labels de status
+      - uses: actions/checkout@v4
+      - name: Ler o Project, ajustar labels e publicar a linha do tempo
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.PROJECT_PAT }}
           script: |
+            const fs = require('fs');
             const OWNER = 'jgdbeck';
             const REPO = 'painel-djud';
             const PROJECT_NUMBER = 1;
@@ -41,10 +51,18 @@ jobs:
                             status: fieldValueByName(name:"Status") {
                               ... on ProjectV2ItemFieldSingleSelectValue { name }
                             }
+                            inicio: fieldValueByName(name:"Start date") {
+                              ... on ProjectV2ItemFieldDateValue { date }
+                            }
+                            termino: fieldValueByName(name:"Target date") {
+                              ... on ProjectV2ItemFieldDateValue { date }
+                            }
                             content {
                               __typename
                               ... on Issue {
                                 number
+                                title
+                                url
                                 labels(first:50) { nodes { name } }
                                 repository { name owner { login } }
                               }
@@ -66,6 +84,7 @@ jobs:
 
             const items = await fetchItems();
             let changed = 0;
+            const timeline = [];
             for (const item of items) {
               const c = item.content;
               if (!c || c.__typename !== 'Issue') continue;
@@ -84,5 +103,30 @@ jobs:
                 await github.rest.issues.addLabels({ owner: OWNER, repo: REPO, issue_number: c.number, labels: [desired] });
                 changed++;
               }
+
+              if (item.inicio && item.inicio.date && item.termino && item.termino.date) {
+                timeline.push({
+                  uid: String(c.number),
+                  entregavel: c.title,
+                  inicio: item.inicio.date,
+                  termino: item.termino.date,
+                  status: desired,
+                  url: c.url,
+                });
+              }
             }
-            core.info(`${items.length} itens do Project lidos, ${changed} ajuste(s) de label aplicado(s).`);
+            core.info(`${items.length} itens do Project lidos, ${changed} ajuste(s) de label aplicado(s), ${timeline.length} com início/término definidos.`);
+
+            timeline.sort((a, b) => a.inicio.localeCompare(b.inicio));
+            const novo = JSON.stringify(timeline, null, 2) + '\n';
+            const atual = fs.existsSync('timeline-data.json') ? fs.readFileSync('timeline-data.json', 'utf8') : null;
+            if (novo !== atual) {
+              fs.writeFileSync('timeline-data.json', novo);
+              await exec.exec('git', ['config', 'user.name', 'github-actions[bot]']);
+              await exec.exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
+              await exec.exec('git', ['add', 'timeline-data.json']);
+              await exec.exec('git', ['commit', '-m', 'Atualizar timeline-data.json a partir do Project']);
+              await exec.exec('git', ['push']);
+            } else {
+              core.info('timeline-data.json sem mudanças.');
+            }
