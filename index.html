@@ -148,6 +148,11 @@
       <button data-tlview="calendario" aria-pressed="true">Calendário</button>
       <button data-tlview="lista" aria-pressed="false">Lista</button>
     </div>
+    <!-- só faz sentido dentro do Calendário; escondido em Lista via JS -->
+    <div class="seg" id="tlFoco" role="group" aria-label="Foco do mês" title="Em andamento: tudo ativo no mês. Entrega: só o que termina no mês.">
+      <button data-tlfoco="andamento" aria-pressed="true">Em andamento</button>
+      <button data-tlfoco="entrega" aria-pressed="false">Entrega</button>
+    </div>
     <input id="tlq" class="input" type="search" placeholder="Buscar entregável…" style="width:220px">
     <div class="spacer"></div>
     <button class="btn" id="tlExpJsonBtn">Exportar JSON</button>

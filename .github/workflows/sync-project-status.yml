@@ -18,6 +18,10 @@ name: Sincronizar status e prazos do Project
 #      do Status (Backlog/Parado = 0%, Em andamento = 50%, Finalizado ou
 #      Registrado no relatório = 100%) — crie o campo com esse nome exato
 #      no Project quando quiser um % de verdade em vez da aproximação.
+#   4. publica também "notas": o texto do último comentário da issue (se
+#      houver), cortado em 400 caracteres. É a coluna Notas da tabela do
+#      Acompanhamento — a ideia é usar o próprio comentário mais recente da
+#      issue como observação, sem precisar de outro campo no Project.
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -123,6 +127,10 @@ jobs:
                   url: c.url,
                 };
                 if (item.pct && typeof item.pct.number === 'number') registro.pct = Math.max(0, Math.min(100, Math.round(item.pct.number)));
+                try {
+                  const { data: comentarios } = await github.rest.issues.listComments({ owner: OWNER, repo: REPO, issue_number: c.number, per_page: 100 });
+                  if (comentarios.length) registro.notas = comentarios[comentarios.length - 1].body.replace(/\s+/g, ' ').trim().slice(0, 400);
+                } catch (e) { core.warning(`ler comentários da #${c.number}: ${e.message}`); }
                 timeline.push(registro);
               }
             }

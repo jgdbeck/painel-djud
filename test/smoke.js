@@ -143,6 +143,7 @@ async function demo() {
   // não pode encolher por causa de uma busca deixada em TL.q por outra aba)
   const linhasAntes = w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length;
   ok(linhasAntes > 0, 'tabela do Acompanhamento renderiza as linhas');
+  ok(w.document.getElementById('acompTabela').textContent.includes('Notas'), 'tabela do Acompanhamento tem a coluna Notas');
   t.TL.q = 'um texto que não bate com nenhum entregável';
   t.renderAcompTabela();
   eq(w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length, linhasAntes, 'tabela do Acompanhamento ignora a busca da Linha do tempo');
@@ -152,6 +153,11 @@ async function demo() {
   goto(t, 'linha');
   ok(w.document.querySelectorAll('#tlArea .tl-cal').length > 0, 'linha do tempo (calendário) renderiza os mini-calendários');
   ok(w.document.querySelectorAll('#tlArea .tl-cal-item').length > 0, 'linha do tempo (calendário) lista os entregáveis na legenda');
+  const itensAndamento = w.document.querySelectorAll('#tlArea .tl-cal-item').length;
+  t.TL.foco = 'entrega'; t.renderTimeline();
+  const itensEntrega = w.document.querySelectorAll('#tlArea .tl-cal-item').length;
+  ok(itensEntrega < itensAndamento, 'foco "Entrega" mostra menos itens por mês que "Em andamento" (só quem termina naquele mês)');
+  t.TL.foco = 'andamento'; t.renderTimeline();
   t.TL.view = 'lista'; t.renderTimeline();
   ok(w.document.querySelectorAll('#tlArea .tl-row').length > 0, 'linha do tempo (lista) renderiza as linhas por entregável');
   t.TL.view = 'calendario'; t.renderTimeline();
@@ -177,9 +183,9 @@ async function demo() {
   t.exportTimelineJson(); t.exportTimelineCsv();
   eq(downloads.length, 4, 'exportar a linha do tempo gera mais 1 download JSON e 1 CSV');
   const tlJson = JSON.parse(await downloads[2].text());
-  ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 6 colunas esperadas');
+  ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 7 colunas esperadas (com notas)');
   const tlCsv = await downloads[3].text();
-  ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url'), 'CSV da linha do tempo tem o cabeçalho esperado');
+  ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas'), 'CSV da linha do tempo tem o cabeçalho esperado');
 
   // exportar a tabela do Acompanhamento: mesmas 6 colunas, mas sempre a lista completa
   t.exportAcompTabelaJson(); t.exportAcompTabelaCsv();

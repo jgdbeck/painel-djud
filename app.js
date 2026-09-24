@@ -352,7 +352,7 @@ function renderAcompTabela() {
   if (!itens.length) { area.innerHTML = '<div class="empty">Nenhum entregável com início/término definidos no Project ainda.</div>'; return; }
   area.innerHTML = `<div class="panel" style="overflow-x:auto">
     <table class="acomp-tabela">
-      <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th></tr></thead>
+      <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th><th>Notas</th></tr></thead>
       <tbody>${itens.map(it => `<tr>
         <td class="ghnum">#${esc(it.uid)}</td>
         <td>${esc(it.entregavel)}</td>
@@ -360,6 +360,7 @@ function renderAcompTabela() {
         <td>${fmtBr(it.termino)}</td>
         <td>${it.pct}%</td>
         <td><a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a></td>
+        <td class="acomp-notas">${esc(it.notas || '—')}</td>
       </tr>`).join('')}</tbody>
     </table>
   </div>`;
@@ -601,7 +602,7 @@ const TL_GRUPO_LABEL = {
   1: 'Em andamento', 2: 'Sem bloqueio de acesso', 3: 'Aguardam o teste do web service do SEI',
   4: 'Dependem de outra entrega do painel', 5: 'Bloqueadas por acesso externo',
 };
-const TL = { q: '', view: 'calendario' };
+const TL = { q: '', view: 'calendario', foco: 'andamento' };
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 /* timeline-data.json é gerado pelo workflow sync-project-status.yml a partir dos
@@ -658,6 +659,8 @@ function renderTimeline() {
   const usaLive = typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length;
   el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">${usaLive ? 'UID, início e término vêm do Project do GitHub (campos Start date / Target date)' : 'UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com o GitHub'}</span>`;
   document.querySelectorAll('#tlView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlview === TL.view)));
+  document.querySelectorAll('#tlFoco button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlfoco === TL.foco)));
+  el('tlFoco').classList.toggle('hidden', TL.view !== 'calendario');
   area.innerHTML = '';
   if (!items.length) { area.innerHTML = '<div class="empty">Nenhum entregável encontrado com esse filtro.</div>'; return; }
   if (TL.view === 'lista') renderTimelineLista(area, items);
@@ -739,16 +742,26 @@ function atribuirCores(items) {
   return cores;
 }
 
+/* "Em andamento" (padrão): tudo o que está ativo naquele mês (o intervalo início–término
+   cruza o mês). "Entrega": só o que tem TÉRMINO naquele mês — sugestão do Henrique, para
+   separar "no que estamos trabalhando" de "o que sai naquele mês". */
+function itensDoFoco(doMes, monthStart, monthEnd) {
+  if (TL.foco !== 'entrega') return doMes;
+  return doMes.filter(it => { const t = new Date(it.termino + 'T00:00:00'); return t >= monthStart && t <= monthEnd; });
+}
+
 function renderTimelineCalendario(area, items) {
   const grid = document.createElement('div');
   grid.className = 'tl-grid';
   const mapaCores = atribuirCores(items);
-  timelineMonths(items).forEach(({ y, m, doMes }, mi) => {
+  const semEntregavelTexto = TL.foco === 'entrega' ? 'Nenhuma entrega prevista neste mês.' : 'Nenhum entregável ativo neste mês.';
+  timelineMonths(items).forEach(({ y, m, monthStart, monthEnd, doMes: todosDoMes }, mi) => {
+    const doMes = itensDoFoco(todosDoMes, monthStart, monthEnd);
     const bloco = document.createElement('div');
     bloco.className = 'tl-block';
     bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
     bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
-      `<div class="tl-block-body">` + calGridHTML(y, m, doMes, mapaCores) + calLegendHTML(doMes, mapaCores) + `</div>`;
+      `<div class="tl-block-body">` + calGridHTML(y, m, doMes, mapaCores) + calLegendHTML(doMes, mapaCores, semEntregavelTexto) + `</div>`;
     grid.appendChild(bloco);
     // ao passar o mouse no entregável, marca os dias do prazo dele no mini-calendário
     bloco.querySelectorAll('.tl-cal-item').forEach(row => {
@@ -789,8 +802,8 @@ function calGridHTML(y, m, doMes, mapaCores) {
   return html;
 }
 
-function calLegendHTML(doMes, mapaCores) {
-  if (!doMes.length) return '<div class="hint">Nenhum entregável ativo neste mês.</div>';
+function calLegendHTML(doMes, mapaCores, semEntregavelTexto) {
+  if (!doMes.length) return `<div class="hint">${semEntregavelTexto || 'Nenhum entregável ativo neste mês.'}</div>`;
   return '<div class="tl-cal-legend">' + doMes.map(it => {
     const cor = mapaCores.get(it.uid);
     const duracao = diasEntre(it.inicio, it.termino);
@@ -933,12 +946,12 @@ function exportCsv() {
    pela aba Linha do tempo (respeita a busca de lá) quanto pela tabela da aba
    Acompanhamento (lista sempre completa, sem depender do filtro de outra tela) */
 function dlTimelineJson(itens) {
-  const linhas = itens.map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url }));
+  const linhas = itens.map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url, notas: it.notas || '' }));
   dl('linha_do_tempo_djud.json', JSON.stringify(linhas, null, 1), 'application/json');
 }
 function dlTimelineCsv(itens) {
-  const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url'];
-  const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url']
+  const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
+  const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas']
     .concat(itens.map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
     .join('\n');
   dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
@@ -1064,6 +1077,7 @@ el('rRefreshBtn').addEventListener('click', () => { ISSUES = null; renderRoadmap
 el('aRefreshBtn').addEventListener('click', () => { ISSUES = null; renderDash(); });
 el('tlq').addEventListener('input', e => { TL.q = e.target.value; renderTimeline(); });
 document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('click', () => { TL.view = b.dataset.tlview; renderTimeline(); }));
+document.querySelectorAll('#tlFoco button').forEach(b => b.addEventListener('click', () => { TL.foco = b.dataset.tlfoco; renderTimeline(); }));
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
