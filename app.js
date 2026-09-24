@@ -659,46 +659,78 @@ function diasEntre(isoA, isoB) {
   return Math.round((new Date(isoB + 'T00:00:00') - new Date(isoA + 'T00:00:00')) / 86400000) + 1;
 }
 
+/* Cor por entregável (não por mês) — fica igual em todos os blocos em que o
+   mesmo entregável aparece, o que ajuda a reconhecer quem é quem quando o
+   prazo atravessa vários meses. Atribuída uma vez, em ordem de início, para
+   ficar estável entre as renderizações. */
+const TL_ITEM_CORES = ['#3B2A6B', '#2E8B8B', '#1E7A4B', '#A86A0C', '#B23A34', '#2F6699', '#6B5CA6', '#9A5B2E', '#0E7C86', '#C2410C'];
+function corDoItem(uid, mapaCores) {
+  if (!mapaCores.has(uid)) mapaCores.set(uid, TL_ITEM_CORES[mapaCores.size % TL_ITEM_CORES.length]);
+  return mapaCores.get(uid);
+}
+
 function renderTimelineCalendario(area, items) {
   const grid = document.createElement('div');
   grid.className = 'tl-grid';
-  timelineMonths(items).forEach(({ y, m, monthStart, monthEnd, doMes }, mi) => {
+  const mapaCores = new Map();
+  items.slice().sort((a, b) => a.inicio.localeCompare(b.inicio)).forEach(it => corDoItem(it.uid, mapaCores));
+  timelineMonths(items).forEach(({ y, m, doMes }, mi) => {
     const bloco = document.createElement('div');
     bloco.className = 'tl-block';
     bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
     bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
-      `<div class="tl-block-body">` +
-      ganttRowsHTML(monthStart, monthEnd, doMes) +
-      `</div>`;
+      `<div class="tl-block-body">` + calGridHTML(y, m, doMes, mapaCores) + calLegendHTML(doMes, mapaCores) + `</div>`;
     grid.appendChild(bloco);
+    // ao passar o mouse no entregável, marca os dias do prazo dele no mini-calendário
+    bloco.querySelectorAll('.tl-cal-item').forEach(row => {
+      const uid = row.dataset.uid;
+      row.addEventListener('mouseenter', () => {
+        bloco.style.setProperty('--hl-cor', mapaCores.get(uid));
+        bloco.querySelectorAll('.tl-cal-day').forEach(cell => {
+          cell.classList.toggle('tl-cal-day-hl', (cell.dataset.uids || '').split(' ').includes(uid));
+        });
+      });
+      row.addEventListener('mouseleave', () => {
+        bloco.querySelectorAll('.tl-cal-day-hl').forEach(cell => cell.classList.remove('tl-cal-day-hl'));
+      });
+    });
   });
   area.appendChild(grid);
 }
 
-/* Uma barra por entregável, mostrando o trecho do prazo que cai neste mês — a
-   largura da barra é o que deixa visível quanto tempo dura, não só que "está
-   ativo". Barra sem ponta arredondada de um lado = o prazo continua além
-   deste mês por aquele lado (começou antes ou termina depois). */
-function ganttRowsHTML(monthStart, monthEnd, doMes) {
+const DIAS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+/* Cada dia com entregável ativo já sai marcado (uma tarja colorida por entregável,
+   até 4) — sem precisar passar o mouse. O hover no nome só reforça: marca com
+   um contorno na cor daquele entregável os dias exatos do prazo dele. */
+function calGridHTML(y, m, doMes, mapaCores) {
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  const firstWeekday = new Date(y, m, 1).getDay();
+  let html = '<div class="tl-cal">' + DIAS_PT.map(d => `<div class="tl-cal-wd">${d}</div>`).join('');
+  for (let i = 0; i < firstWeekday; i++) html += '<div class="tl-cal-day tl-cal-blank"></div>';
+  for (let d = 1; d <= lastDay; d++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const ativos = doMes.filter(it => it.inicio <= iso && it.termino >= iso);
+    const uids = ativos.map(it => it.uid).join(' ');
+    const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
+    const barras = ativos.slice(0, 4).map(it => `<span style="background:${corDoItem(it.uid, mapaCores)}"></span>`).join('');
+    html += `<div class="tl-cal-day${ativos.length ? ' tl-cal-active' : ''}" data-uids="${esc(uids)}" title="${title}">${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function calLegendHTML(doMes, mapaCores) {
   if (!doMes.length) return '<div class="hint">Nenhum entregável ativo neste mês.</div>';
-  const diasNoMes = monthEnd.getDate();
-  return '<div class="tl-gantt">' + doMes.map(it => {
-    const inicioDate = new Date(it.inicio + 'T00:00:00'), terminoDate = new Date(it.termino + 'T00:00:00');
-    const cortaInicio = inicioDate < monthStart, cortaFim = terminoDate > monthEnd;
-    const segIni = cortaInicio ? 1 : inicioDate.getDate();
-    const segFim = cortaFim ? diasNoMes : terminoDate.getDate();
-    const left = (segIni - 1) / diasNoMes * 100;
-    const width = Math.max((segFim - segIni + 1) / diasNoMes * 100, 100 / diasNoMes);
+  return '<div class="tl-cal-legend">' + doMes.map(it => {
+    const cor = corDoItem(it.uid, mapaCores);
     const duracao = diasEntre(it.inicio, it.termino);
-    const entregaEsteMes = !cortaFim;
-    return `<a class="tl-gantt-row${entregaEsteMes ? ' tl-gantt-row-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
-        <div class="tl-gantt-label">
-          <span class="ghnum">#${esc(it.uid)}</span>
-          <span class="tl-gantt-tit">${esc(it.entregavel)}</span>
-          <span class="tl-pct">${it.pct}%</span>
-        </div>
-        <div class="tl-gantt-track"><div class="tl-gantt-bar${cortaInicio ? ' corta-inicio' : ''}${cortaFim ? ' corta-fim' : ''}" style="left:${left}%;width:${width}%"></div></div>
-        <div class="tl-gantt-dur">${duracao} dia${duracao === 1 ? '' : 's'} de prazo · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</div>
+    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
+        <span class="tl-cal-item-dot"></span>
+        <span class="ghnum">#${esc(it.uid)}</span>
+        <span class="tl-cal-item-tit">${esc(it.entregavel)}</span>
+        <span class="tl-cal-item-dias">${duracao}d</span>
+        <span class="tl-pct">${it.pct}%</span>
       </a>`;
   }).join('') + '</div>';
 }
