@@ -811,8 +811,10 @@ function calGridHTML(y, m, doMes, mapaCores, foco) {
     const barras = ativos.slice(0, 4).map(it => `<span style="background:${mapaCores.get(it.uid)}"></span>`).join('');
     const classes = ['tl-cal-day'];
     if (ativos.length) classes.push('tl-cal-active');
-    if (ativos.length && foco === 'entrega') classes.push('tl-cal-day-entrega');
-    html += `<div class="${classes.join(' ')}" data-uids="${esc(uids)}" title="${title}">${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
+    const corEntrega = (ativos.length && foco === 'entrega') ? mapaCores.get(ativos[0].uid) : null;
+    if (corEntrega) classes.push('tl-cal-day-entrega');
+    const estiloCor = corEntrega ? ` style="--cor-entrega:${corEntrega}"` : '';
+    html += `<div class="${classes.join(' ')}" data-uids="${esc(uids)}" title="${title}"${estiloCor}>${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
   }
   html += '</div>';
   return html;
