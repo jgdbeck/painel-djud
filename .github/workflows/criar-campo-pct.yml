@@ -1,0 +1,52 @@
+name: Criar campo % Complete no Project
+
+# Workflow manual, de uso único: cria o campo numérico "% Complete" no
+# Project (nº 1), se ele ainda não existir. Depois de criado, o time
+# preenche o % de cada issue direto no Project (não tem como isso vir de
+# outro lugar — é acompanhamento manual mesmo); sync-project-status.yml já
+# está pronto para ler esse campo assim que ele existir e tiver valores.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  criar-campo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Criar o campo, se não existir
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_PAT }}
+          script: |
+            const OWNER = 'jgdbeck';
+            const PROJECT_NUMBER = 1;
+            const NOME_CAMPO = '% Complete';
+
+            const res = await github.graphql(
+              `query($login:String!, $number:Int!) {
+                user(login:$login) {
+                  projectV2(number:$number) {
+                    id
+                    campo: field(name:"${NOME_CAMPO}") { ... on ProjectV2FieldCommon { id name } }
+                  }
+                }
+              }`,
+              { login: OWNER, number: PROJECT_NUMBER }
+            );
+            const proj = res.user.projectV2;
+
+            if (proj.campo) {
+              core.info(`Campo "${NOME_CAMPO}" já existe (id ${proj.campo.id}). Nada a fazer.`);
+              return;
+            }
+
+            const criado = await github.graphql(
+              `mutation($projectId:ID!, $nome:String!) {
+                createProjectV2Field(input: {
+                  projectId:$projectId, dataType:NUMBER, name:$nome
+                }) {
+                  projectV2Field { ... on ProjectV2Field { id name } }
+                }
+              }`,
+              { projectId: proj.id, nome: NOME_CAMPO }
+            );
+            core.info(`Campo "${NOME_CAMPO}" criado (id ${criado.createProjectV2Field.projectV2Field.id}).`);
