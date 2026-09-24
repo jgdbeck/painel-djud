@@ -19,8 +19,16 @@
     "notas": "[16/09/2026] Precisamos fazer um levantamento sobre essa demanda dos dados que precisamos do acesso ao SAPIENS.\n[17/09/2026] Levantamento passado pelo Andrei Número do processo judicial e NUP administrativo; Tribunal, vara e unidade da AGU responsável; Identificação do paciente, preferencialmente CPF, para evitar duplicidad"
   },
   {
+    "uid": "180",
+    "entregavel": "Painel de medicamentos mais judicializados (SISMAT + FUNDO)",
+    "inicio": "2026-09-28",
+    "termino": "2026-11-16",
+    "status": "Em andamento",
+    "url": "https://github.com/jgdbeck/painel-djud/issues/180"
+  },
+  {
     "uid": "156",
-    "entregavel": "Painel de medicamentos mais judicializados",
+    "entregavel": "Painel de medicamentos mais judicializados REDMINE",
     "inicio": "2026-11-03",
     "termino": "2026-12-26",
     "status": "Em andamento",
