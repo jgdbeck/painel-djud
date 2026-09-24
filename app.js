@@ -581,7 +581,6 @@ const TL_GRUPO_LABEL = {
 };
 const TL = { q: '', view: 'calendario' };
 const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-const DIAS_PT = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
 /* timeline-data.json é gerado pelo workflow sync-project-status.yml a partir dos
    campos "Start date" / "Target date" do Project (ver ali). Enquanto uma issue não
@@ -649,54 +648,61 @@ function renderTimelineLista(area, items) {
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-row-tit">${esc(it.entregavel)}</span>
         <span class="tl-row-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
-        <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</span>
+        <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${diasEntre(it.inicio, it.termino)} dia(s)</span>
         <span class="tl-pct">${it.pct}%</span>
       </a>`).join('');
     area.appendChild(panel);
   });
 }
 
+function diasEntre(isoA, isoB) {
+  return Math.round((new Date(isoB + 'T00:00:00') - new Date(isoA + 'T00:00:00')) / 86400000) + 1;
+}
+
 function renderTimelineCalendario(area, items) {
   const grid = document.createElement('div');
   grid.className = 'tl-grid';
-  timelineMonths(items).forEach(({ y, m, doMes }, mi) => {
+  timelineMonths(items).forEach(({ y, m, monthStart, monthEnd, doMes }, mi) => {
     const bloco = document.createElement('div');
     bloco.className = 'tl-block';
     bloco.style.setProperty('--tl-cor', TL_CORES[mi % TL_CORES.length]);
     bloco.innerHTML = `<div class="tl-block-head"><span class="tl-block-mes">${MESES_PT[m]}</span><span class="tl-block-ano">${y}</span><span class="tl-block-count">${doMes.length}</span></div>` +
       `<div class="tl-block-body">` +
-      diaGridHTML(y, m, doMes) +
-      (doMes.length
-        ? doMes.map(it => `<a class="tl-chip${it.termino >= `${y}-${String(m + 1).padStart(2, '0')}-01` && it.termino <= `${y}-${String(m + 1).padStart(2, '0')}-31` ? ' tl-chip-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}%">
-              <span class="ghnum">#${esc(it.uid)}</span>
-              <span class="tl-chip-tit">${esc(it.entregavel)}</span>
-              <span class="tl-pct">${it.pct}%</span>
-            </a>`).join('')
-        : '<div class="hint">Nenhum entregável ativo neste mês.</div>') +
+      ganttRowsHTML(monthStart, monthEnd, doMes) +
       `</div>`;
     grid.appendChild(bloco);
   });
   area.appendChild(grid);
 }
 
-function diaGridHTML(y, m, doMes) {
-  const lastDay = new Date(y, m + 1, 0).getDate();
-  const firstWeekday = new Date(y, m, 1).getDay();
-  let html = '<div class="tl-cal">' + DIAS_PT.map(d => `<div class="tl-cal-wd">${d}</div>`).join('');
-  for (let i = 0; i < firstWeekday; i++) html += '<div class="tl-cal-day tl-cal-blank"></div>';
-  for (let d = 1; d <= lastDay; d++) {
-    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const ativos = doMes.filter(it => it.inicio <= iso && it.termino >= iso);
-    const cls = ['tl-cal-day'];
-    if (ativos.length) cls.push('tl-cal-active');
-    if (doMes.some(it => it.inicio === iso)) cls.push('tl-cal-start');
-    if (doMes.some(it => it.termino === iso)) cls.push('tl-cal-end');
-    const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
-    html += `<div class="${cls.join(' ')}" title="${title}">${d}${ativos.length ? '<span class="tl-cal-dot"></span>' : ''}</div>`;
-  }
-  html += '</div>';
-  return html;
+/* Uma barra por entregável, mostrando o trecho do prazo que cai neste mês — a
+   largura da barra é o que deixa visível quanto tempo dura, não só que "está
+   ativo". Barra sem ponta arredondada de um lado = o prazo continua além
+   deste mês por aquele lado (começou antes ou termina depois). */
+function ganttRowsHTML(monthStart, monthEnd, doMes) {
+  if (!doMes.length) return '<div class="hint">Nenhum entregável ativo neste mês.</div>';
+  const diasNoMes = monthEnd.getDate();
+  return '<div class="tl-gantt">' + doMes.map(it => {
+    const inicioDate = new Date(it.inicio + 'T00:00:00'), terminoDate = new Date(it.termino + 'T00:00:00');
+    const cortaInicio = inicioDate < monthStart, cortaFim = terminoDate > monthEnd;
+    const segIni = cortaInicio ? 1 : inicioDate.getDate();
+    const segFim = cortaFim ? diasNoMes : terminoDate.getDate();
+    const left = (segIni - 1) / diasNoMes * 100;
+    const width = Math.max((segFim - segIni + 1) / diasNoMes * 100, 100 / diasNoMes);
+    const duracao = diasEntre(it.inicio, it.termino);
+    const entregaEsteMes = !cortaFim;
+    return `<a class="tl-gantt-row${entregaEsteMes ? ' tl-gantt-row-entrega' : ''}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
+        <div class="tl-gantt-label">
+          <span class="ghnum">#${esc(it.uid)}</span>
+          <span class="tl-gantt-tit">${esc(it.entregavel)}</span>
+          <span class="tl-pct">${it.pct}%</span>
+        </div>
+        <div class="tl-gantt-track"><div class="tl-gantt-bar${cortaInicio ? ' corta-inicio' : ''}${cortaFim ? ' corta-fim' : ''}" style="left:${left}%;width:${width}%"></div></div>
+        <div class="tl-gantt-dur">${duracao} dia${duracao === 1 ? '' : 's'} de prazo · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)}</div>
+      </a>`;
+  }).join('') + '</div>';
 }
+
 function fmtBr(iso) { const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; }
 
 function go(s) {
