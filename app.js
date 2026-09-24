@@ -661,19 +661,62 @@ function diasEntre(isoA, isoB) {
 
 /* Cor por entregável (não por mês) — fica igual em todos os blocos em que o
    mesmo entregável aparece, o que ajuda a reconhecer quem é quem quando o
-   prazo atravessa vários meses. Atribuída uma vez, em ordem de início, para
-   ficar estável entre as renderizações. */
-const TL_ITEM_CORES = ['#3B2A6B', '#2E8B8B', '#1E7A4B', '#A86A0C', '#B23A34', '#2F6699', '#6B5CA6', '#9A5B2E', '#0E7C86', '#C2410C'];
-function corDoItem(uid, mapaCores) {
-  if (!mapaCores.has(uid)) mapaCores.set(uid, TL_ITEM_CORES[mapaCores.size % TL_ITEM_CORES.length]);
-  return mapaCores.get(uid);
+   prazo atravessa vários meses. Paleta do tema DJUD (Power BI). Duas dessas
+   cores são parecidas entre si (os dois azuis-marinho); atribuirCores() evita
+   colocar cores iguais OU parecidas em entregáveis que dividem algum mês. */
+const TL_ITEM_CORES = ['#080369', '#D3B456', '#27724F', '#6A1D20', '#6A74AE', '#132671', '#121B12', '#D4D1C3'];
+const COR_DIST_MINIMA = 60;
+
+function hexParaRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function coresParecidas(a, b) {
+  const [r1, g1, b1] = hexParaRgb(a), [r2, g2, b2] = hexParaRgb(b);
+  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2) < COR_DIST_MINIMA;
+}
+function mesesDoItem(it) {
+  const meses = new Set();
+  let cursor = new Date(it.inicio + 'T00:00:00'); cursor.setDate(1);
+  const fim = new Date(it.termino + 'T00:00:00');
+  while (cursor <= fim) {
+    meses.add(cursor.getFullYear() + '-' + cursor.getMonth());
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+  }
+  return meses;
+}
+function atribuirCores(items) {
+  const cores = new Map(), mesesPorUid = new Map();
+  let ultimoIndice = -1;
+  items.slice().sort((a, b) => a.inicio.localeCompare(b.inicio)).forEach(it => {
+    const meses = mesesDoItem(it);
+    mesesPorUid.set(it.uid, meses);
+    const conflitantes = [];
+    for (const [uidOutro, corOutro] of cores) {
+      if ([...meses].some(mes => mesesPorUid.get(uidOutro).has(mes))) conflitantes.push(corOutro);
+    }
+    let escolhida = null;
+    for (let i = 1; i <= TL_ITEM_CORES.length && !escolhida; i++) {
+      const cand = TL_ITEM_CORES[(ultimoIndice + i) % TL_ITEM_CORES.length];
+      if (!conflitantes.some(c => coresParecidas(c, cand))) { escolhida = cand; ultimoIndice = (ultimoIndice + i) % TL_ITEM_CORES.length; }
+    }
+    if (!escolhida) {
+      // mais entregáveis simultâneos neste mês do que cores na paleta — não dá pra
+      // evitar toda repetição; usa a cor que colide com o menor número de vizinhos
+      const contagem = TL_ITEM_CORES.map(c => conflitantes.filter(x => coresParecidas(x, c)).length);
+      const menorIndice = contagem.indexOf(Math.min(...contagem));
+      escolhida = TL_ITEM_CORES[menorIndice];
+      ultimoIndice = menorIndice;
+    }
+    cores.set(it.uid, escolhida);
+  });
+  return cores;
 }
 
 function renderTimelineCalendario(area, items) {
   const grid = document.createElement('div');
   grid.className = 'tl-grid';
-  const mapaCores = new Map();
-  items.slice().sort((a, b) => a.inicio.localeCompare(b.inicio)).forEach(it => corDoItem(it.uid, mapaCores));
+  const mapaCores = atribuirCores(items);
   timelineMonths(items).forEach(({ y, m, doMes }, mi) => {
     const bloco = document.createElement('div');
     bloco.className = 'tl-block';
@@ -713,7 +756,7 @@ function calGridHTML(y, m, doMes, mapaCores) {
     const ativos = doMes.filter(it => it.inicio <= iso && it.termino >= iso);
     const uids = ativos.map(it => it.uid).join(' ');
     const title = ativos.length ? esc(ativos.map(it => `#${it.uid} ${it.entregavel}`).join(' · ')) : '';
-    const barras = ativos.slice(0, 4).map(it => `<span style="background:${corDoItem(it.uid, mapaCores)}"></span>`).join('');
+    const barras = ativos.slice(0, 4).map(it => `<span style="background:${mapaCores.get(it.uid)}"></span>`).join('');
     html += `<div class="tl-cal-day${ativos.length ? ' tl-cal-active' : ''}" data-uids="${esc(uids)}" title="${title}">${d}${ativos.length ? `<div class="tl-cal-day-bars">${barras}</div>` : ''}</div>`;
   }
   html += '</div>';
@@ -723,7 +766,7 @@ function calGridHTML(y, m, doMes, mapaCores) {
 function calLegendHTML(doMes, mapaCores) {
   if (!doMes.length) return '<div class="hint">Nenhum entregável ativo neste mês.</div>';
   return '<div class="tl-cal-legend">' + doMes.map(it => {
-    const cor = corDoItem(it.uid, mapaCores);
+    const cor = mapaCores.get(it.uid);
     const duracao = diasEntre(it.inicio, it.termino);
     return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
         <span class="tl-cal-item-dot"></span>
