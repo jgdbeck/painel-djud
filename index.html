@@ -16,6 +16,7 @@
       <button data-screen="acomp" aria-current="false">Acompanhamento</button>
       <button data-screen="plano" aria-current="false">Plano</button>
       <button data-screen="roadmap" aria-current="false">Roadmap</button>
+      <button data-screen="linha" aria-current="false">Linha do tempo</button>
     </nav>
     <div class="spacer"></div>
     <span class="modebadge mode-demo" id="modeBadge">Modo demonstração</span>
@@ -122,6 +123,20 @@
   </div>
   <div class="legend" id="roadmapLegend"></div>
   <div id="roadmapArea"></div>
+</main>
+
+<!-- LINHA DO TEMPO (calendário de entregas, mês a mês) -->
+<main class="wrap hidden" id="scr-linha">
+  <div class="plano-title">
+    <h1>Linha do tempo</h1>
+    <p>Uma linha por entregável, com UID, início, término e % — organizada por mês. Dado de exemplo por enquanto; ainda não vem do GitHub.</p>
+  </div>
+  <div class="controls">
+    <input id="tlq" class="input" type="search" placeholder="Buscar entregável…" style="width:220px">
+    <div class="spacer"></div>
+  </div>
+  <div class="legend" id="tlLegend"></div>
+  <div id="tlArea"></div>
 </main>
 
 <!-- modal editar -->
