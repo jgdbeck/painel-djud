@@ -1031,19 +1031,16 @@ function timelineCsv(linhas) {
     .join('\n');
 }
 
-/* export da linha do tempo: UID, entregável, início, término, % e URL — usado tanto
-   pela aba Linha do tempo (respeita a busca de lá) quanto pela tabela da aba
-   Acompanhamento (lista sempre completa, sem depender do filtro de outra tela).
+/* export da tabela do Acompanhamento: UID, entregável, início, término, % e URL.
    Um registro por atualização (ver explodeNotas): cada nota nova repete os dados
-   do entregável, do jeito que o gestor cola no Project dele. */
+   do entregável, do jeito que o gestor cola no Project dele. Só existe aqui — a
+   Linha do tempo não tem exportação própria, pra não duplicar o mesmo dado. */
 function dlTimelineJson(itens) {
   dl('linha_do_tempo_djud.json', JSON.stringify(explodeNotas(itens), null, 1), 'application/json');
 }
 function dlTimelineCsv(itens) {
   dl('linha_do_tempo_djud.csv', '﻿' + timelineCsv(explodeNotas(itens)), 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
-function exportTimelineJson() { dlTimelineJson(filteredTimeline()); }
-function exportTimelineCsv() { dlTimelineCsv(filteredTimeline()); }
 function exportAcompTabelaJson() { dlTimelineJson(timelineItens()); }
 function exportAcompTabelaCsv() { dlTimelineCsv(timelineItens()); }
 
@@ -1198,8 +1195,6 @@ document.querySelectorAll('#tlView button').forEach(b => b.addEventListener('cli
 document.querySelectorAll('#tlFoco button').forEach(b => b.addEventListener('click', () => { TL.foco = b.dataset.tlfoco; renderTimeline(); }));
 el('tlAno').addEventListener('change', e => { TL.ano = e.target.value; renderTimeline(); });
 el('tlRefreshBtn').addEventListener('click', refreshTimelineLive);
-el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
-el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
 preencherPeriodoNotasPadrao();
 el('acompExpNovasBtn').addEventListener('click', exportNotasPeriodoCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);

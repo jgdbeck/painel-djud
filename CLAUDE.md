@@ -23,7 +23,7 @@ Scripts are **classic, not modules** — deliberately, so `file://` keeps workin
 
 ```bash
 python3 -m http.server 8000      # serve the panel
-cd test && npm install && npm test   # 79 assertions, jsdom
+cd test && npm install && npm test   # 97 assertions, jsdom
 ```
 
 `test/smoke.js` loads the real page in jsdom and drives both modes; the sheet is stubbed via `fetch`, so it needs no network and no password. Node lives **only** in `test/` — never add a dependency, build step, or `type="module"` to the panel itself.

@@ -27,7 +27,7 @@ const PONTE = `window.__t = {
   get store(){return store}, get auth(){return auth},
   LIVE, CAN_EDIT, COORDS, PRIOS, COMPS, STATUS, F, FA, TL,
   normalize, go, renderBoard, renderDash, renderTimeline, renderAcompTabela, refreshTimelineLive, openEdit, saveEdit, removeCard,
-  exportJson, exportCsv, exportTimelineJson, exportTimelineCsv, exportAcompTabelaJson, exportAcompTabelaCsv,
+  exportJson, exportCsv, exportAcompTabelaJson, exportAcompTabelaCsv,
   doLogin, forgetPass
 };`;
 
@@ -208,20 +208,15 @@ async function demo() {
   t.DATA = []; t.DATA = await t.store.resetSeed();
   eq(t.DATA.length, 35, 'reiniciar volta ao seed');
 
-  // exportar linha do tempo: uid, entregável, início, término, % e url
-  goto(t, 'linha');
-  t.exportTimelineJson(); t.exportTimelineCsv();
-  eq(downloads.length, 4, 'exportar a linha do tempo gera mais 1 download JSON e 1 CSV');
-  const tlJson = JSON.parse(await downloads[2].text());
-  ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'data_nota', 'nota'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 8 colunas esperadas (data e nota separadas)');
-  const tlCsv = await downloads[3].text();
-  ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url,data_nota,nota'), 'CSV da linha do tempo tem o cabeçalho esperado');
-
-  // exportar a tabela do Acompanhamento: mesmas 6 colunas, mas sempre a lista completa
+  // exportar a tabela do Acompanhamento: uid, entregável, início, término, % e url
+  // (única exportação da linha do tempo/entregáveis — a aba Linha do tempo não tem mais botão próprio)
+  goto(t, 'acomp');
   t.exportAcompTabelaJson(); t.exportAcompTabelaCsv();
-  eq(downloads.length, 6, 'exportar a tabela do Acompanhamento gera mais 1 download JSON e 1 CSV');
-  const acJson = JSON.parse(await downloads[4].text());
-  eq(acJson.length, tlJson.length, 'export do Acompanhamento tem a mesma quantidade de linhas que o da Linha do tempo sem busca');
+  eq(downloads.length, 4, 'exportar o Acompanhamento gera mais 1 download JSON e 1 CSV');
+  const acJson = JSON.parse(await downloads[2].text());
+  ok(acJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'data_nota', 'nota'].every(k => k in acJson[0]), 'JSON do Acompanhamento tem as 8 colunas esperadas (data e nota separadas)');
+  const acCsv = await downloads[3].text();
+  ok(acCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url,data_nota,nota'), 'CSV do Acompanhamento tem o cabeçalho esperado');
 }
 
 /* ============ NORMALIZE ============ */
