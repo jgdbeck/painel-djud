@@ -343,6 +343,21 @@ async function renderDash() {
     <div class="panel"><h3>Execução por meta</h3><div class="hint">Percentual médio (aproximado) em cada meta do roadmap.</div>${barRows(byMeta)}</div></div>`;
 }
 
+/* explode notas num registro por atualização: repete uid/entregável/início/término/%/url
+   e cada nota (já vem "[dd/mm/aaaa] texto", uma por linha, do sync do Project) vira sua
+   própria linha — é o formato que o gestor usa pra colar/importar no Project dele. Sem
+   notas, o entregável ainda aparece, com uma linha só e notas em branco. */
+function explodeNotas(itens) {
+  const linhas = [];
+  for (const it of itens) {
+    const base = { uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url };
+    const notas = (it.notas || '').split('\n').map(s => s.trim()).filter(Boolean);
+    if (!notas.length) linhas.push({ ...base, notas: '' });
+    else for (const n of notas) linhas.push({ ...base, notas: n });
+  }
+  return linhas;
+}
+
 /* Tabela para exportar e mandar ao coordenador: UID, entregável, início, término, % e URL.
    Mesma fonte da Linha do tempo (TIMELINE_LIVE/TIMELINE_DEMO via filteredTimeline()), sem o
    filtro de busca da aba Linha do tempo — aqui é sempre a lista completa. */
@@ -350,10 +365,11 @@ function renderAcompTabela() {
   const area = el('acompTabela');
   const itens = timelineItens().slice().sort((a, b) => a.inicio.localeCompare(b.inicio));
   if (!itens.length) { area.innerHTML = '<div class="empty">Nenhum entregável com início/término definidos no Project ainda.</div>'; return; }
+  const linhas = explodeNotas(itens);
   area.innerHTML = `<div class="panel" style="overflow-x:auto">
     <table class="acomp-tabela">
       <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th><th>Notas</th></tr></thead>
-      <tbody>${itens.map(it => `<tr>
+      <tbody>${linhas.map(it => `<tr>
         <td class="ghnum">#${esc(it.uid)}</td>
         <td>${esc(it.entregavel)}</td>
         <td>${fmtBr(it.inicio)}</td>
@@ -968,22 +984,16 @@ function exportCsv() {
 
 /* export da linha do tempo: UID, entregável, início, término, % e URL — usado tanto
    pela aba Linha do tempo (respeita a busca de lá) quanto pela tabela da aba
-   Acompanhamento (lista sempre completa, sem depender do filtro de outra tela) */
+   Acompanhamento (lista sempre completa, sem depender do filtro de outra tela).
+   Um registro por atualização (ver explodeNotas): cada nota nova repete os dados
+   do entregável, do jeito que o gestor cola no Project dele. */
 function dlTimelineJson(itens) {
-  const linhas = itens.map(it => ({ uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url, notas: it.notas || '' }));
-  dl('linha_do_tempo_djud.json', JSON.stringify(linhas, null, 1), 'application/json');
+  dl('linha_do_tempo_djud.json', JSON.stringify(explodeNotas(itens), null, 1), 'application/json');
 }
 function dlTimelineCsv(itens) {
   const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
   const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas']
-    .concat(itens.map(it => cols.map(k => {
-      let v = it[k] == null ? '' : String(it[k]);
-      // notas guarda uma atualização por linha (bom pro painel); no CSV isso confunde
-      // planilha/Excel ao colar, que às vezes trata cada quebra como nova linha da
-      // tabela e desalinha as colunas seguintes — então aqui vira um separador visível.
-      if (k === 'notas') v = v.replace(/\r?\n+/g, ' | ');
-      return '"' + v.replace(/"/g, '""') + '"';
-    }).join(',')))
+    .concat(explodeNotas(itens).map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
     .join('\n');
   dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
