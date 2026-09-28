@@ -976,7 +976,14 @@ function dlTimelineJson(itens) {
 function dlTimelineCsv(itens) {
   const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
   const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas']
-    .concat(itens.map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
+    .concat(itens.map(it => cols.map(k => {
+      let v = it[k] == null ? '' : String(it[k]);
+      // notas guarda uma atualização por linha (bom pro painel); no CSV isso confunde
+      // planilha/Excel ao colar, que às vezes trata cada quebra como nova linha da
+      // tabela e desalinha as colunas seguintes — então aqui vira um separador visível.
+      if (k === 'notas') v = v.replace(/\r?\n+/g, ' | ');
+      return '"' + v.replace(/"/g, '""') + '"';
+    }).join(',')))
     .join('\n');
   dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
