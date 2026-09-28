@@ -7,7 +7,7 @@
 <!-- ?v= nos 4 arquivos abaixo é cache-busting: sem isso o navegador pode continuar
      servindo uma versão antiga em cache depois de uma atualização publicada.
      Bump ESTE número (junto nos 4) sempre que mexer em config.js/data.js/app.js/app.css. -->
-<link rel="stylesheet" href="app.css?v=20260928g">
+<link rel="stylesheet" href="app.css?v=20260928h">
 </head>
 <body>
 <header class="topbar">
@@ -104,10 +104,12 @@
   </div>
   <div class="controls">
     <div class="spacer"></div>
-    <input type="date" id="acompNotasDe" class="input" aria-label="Notas a partir de">
-    <span style="color:var(--muted);font-size:12px">até</span>
-    <input type="date" id="acompNotasAte" class="input" aria-label="Notas até">
-    <button class="btn" id="acompExpNovasBtn" title="Só as notas com data dentro do período escolhido ao lado">Exportar notas do período</button>
+    <span id="acompNotasPeriodo" style="display:flex;align-items:center;gap:10px">
+      <input type="date" id="acompNotasDe" class="input" aria-label="Notas a partir de">
+      <span style="color:var(--muted);font-size:12px">até</span>
+      <input type="date" id="acompNotasAte" class="input" aria-label="Notas até">
+      <button class="btn" id="acompExpNovasBtn" title="Só as notas com data dentro do período escolhido ao lado">Exportar notas do período</button>
+    </span>
     <button class="btn" id="acompExpJsonBtn">Exportar JSON</button>
     <button class="btn" id="acompExpCsvBtn" title="Para abrir no Excel">Exportar CSV</button>
   </div>
@@ -230,8 +232,8 @@
   </div>
 </div>
 
-<script src="config.js?v=20260928g"></script>
-<script src="data.js?v=20260928g"></script>
-<script src="app.js?v=20260928g"></script>
+<script src="config.js?v=20260928h"></script>
+<script src="data.js?v=20260928h"></script>
+<script src="app.js?v=20260928h"></script>
 </body>
 </html>

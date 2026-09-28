@@ -1110,6 +1110,7 @@ function updateWho() {
   el('addBtn').style.display = CAN_EDIT() ? '' : 'none';
   el('impBtn').style.display = CAN_EDIT() ? '' : 'none';
   el('resetBtn').style.display = LIVE ? 'none' : '';
+  el('acompNotasPeriodo').style.display = CAN_EDIT() ? 'flex' : 'none';
 }
 function openLogin() { el('lErr').textContent = ''; el('lPass').value = ''; el('loginBack').classList.add('open'); setTimeout(() => el('lPass').focus(), 30); }
 function closeLogin() { el('loginBack').classList.remove('open'); }
