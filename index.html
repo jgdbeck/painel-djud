@@ -7,7 +7,7 @@
 <!-- ?v= nos 4 arquivos abaixo é cache-busting: sem isso o navegador pode continuar
      servindo uma versão antiga em cache depois de uma atualização publicada.
      Bump ESTE número (junto nos 4) sempre que mexer em config.js/data.js/app.js/app.css. -->
-<link rel="stylesheet" href="app.css?v=20260928b">
+<link rel="stylesheet" href="app.css?v=20260928c">
 </head>
 <body>
 <header class="topbar">
@@ -104,6 +104,7 @@
   </div>
   <div class="controls">
     <div class="spacer"></div>
+    <button class="btn" id="acompExpNovasBtn" title="Só as notas adicionadas desde a última vez que você clicou aqui">Exportar novas notas</button>
     <button class="btn" id="acompExpJsonBtn">Exportar JSON</button>
     <button class="btn" id="acompExpCsvBtn" title="Para abrir no Excel">Exportar CSV</button>
   </div>
@@ -226,8 +227,8 @@
   </div>
 </div>
 
-<script src="config.js?v=20260928b"></script>
-<script src="data.js?v=20260928b"></script>
-<script src="app.js?v=20260928b"></script>
+<script src="config.js?v=20260928c"></script>
+<script src="data.js?v=20260928c"></script>
+<script src="app.js?v=20260928c"></script>
 </body>
 </html>

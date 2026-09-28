@@ -70,4 +70,4 @@ Enums live in `data.js` **only**. `<option>` lists are generated in `fillSelects
 
 - `SEED` is the demo-mode starting point only. In connected mode it is never read; editing it does nothing to the sheet.
 - Changing `Codigo.gs` requires publishing a **new version of the existing deployment**, not a new deployment — a new one gets a different URL and silently orphans `config.js`.
-- localStorage keys: `djud_demandas_v3` (demo data), `djud_pass` (edit password).
+- localStorage keys: `djud_demandas_v3` (demo data), `djud_pass` (edit password), `djud_notas_exportadas_v1` (per-uid last note text sent via "Exportar novas notas" — per-browser, not synced anywhere).

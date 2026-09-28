@@ -13,6 +13,10 @@ const CAN_EDIT = () => !LIVE || auth.authed;
 const shortOf = f => (COORDS.find(c => c.full === f) || {}).short || f;
 const dotOf = f => (COORDS.find(c => c.full === f) || {}).dot || '#94A3B8';
 const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+/* <a> sem href não é link (nem foco, nem clique) — melhor que href="" apontando
+   pra própria página. Usado nos cartões da Linha do tempo, que podem não ter
+   a URL da entrega preenchida no Project ainda. */
+const hrefAttr = url => url ? `href="${esc(url)}"` : '';
 const avg = a => a.length ? Math.round(a.reduce((s, x) => s + (x || 0), 0) / a.length) : 0;
 const el = id => document.getElementById(id);
 
@@ -375,7 +379,7 @@ function renderAcompTabela() {
         <td>${fmtBr(it.inicio)}</td>
         <td>${fmtBr(it.termino)}</td>
         <td>${it.pct}%</td>
-        <td><a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a></td>
+        <td>${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a>` : '—'}</td>
         <td class="acomp-notas">${esc(it.notas || '—')}</td>
       </tr>`).join('')}</tbody>
     </table>
@@ -706,7 +710,7 @@ function renderTimelineLista(area, items) {
     const panel = document.createElement('div');
     panel.className = 'panel tl-month';
     panel.innerHTML = `<h3>${MESES_PT[m]} ${y}</h3>` +
-      doMes.map(it => `<a class="tl-row" href="${esc(it.url)}" target="_blank" rel="noopener">
+      doMes.map(it => `<a class="tl-row" ${hrefAttr(it.url)} target="_blank" rel="noopener">
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-row-tit">${esc(it.entregavel)}</span>
         <span class="tl-row-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
@@ -847,7 +851,7 @@ function calLegendHTML(doMes, mapaCores, semEntregavelTexto) {
   return '<div class="tl-cal-legend">' + doMes.map(it => {
     const cor = mapaCores.get(it.uid);
     const duracao = diasEntre(it.inicio, it.termino);
-    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" href="${esc(it.url)}" target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
+    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" ${hrefAttr(it.url)} target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
         <span class="tl-cal-item-dot"></span>
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-cal-item-tit">${esc(it.entregavel)}</span>
@@ -982,6 +986,14 @@ function exportCsv() {
   dl('demandas_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
 
+const TIMELINE_CSV_COLS = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
+const TIMELINE_CSV_HEADER = 'uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas';
+function timelineCsv(linhas) {
+  return [TIMELINE_CSV_HEADER]
+    .concat(linhas.map(it => TIMELINE_CSV_COLS.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
+    .join('\n');
+}
+
 /* export da linha do tempo: UID, entregável, início, término, % e URL — usado tanto
    pela aba Linha do tempo (respeita a busca de lá) quanto pela tabela da aba
    Acompanhamento (lista sempre completa, sem depender do filtro de outra tela).
@@ -991,16 +1003,51 @@ function dlTimelineJson(itens) {
   dl('linha_do_tempo_djud.json', JSON.stringify(explodeNotas(itens), null, 1), 'application/json');
 }
 function dlTimelineCsv(itens) {
-  const cols = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
-  const csv = ['uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas']
-    .concat(explodeNotas(itens).map(it => cols.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
-    .join('\n');
-  dl('linha_do_tempo_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
+  dl('linha_do_tempo_djud.csv', '﻿' + timelineCsv(explodeNotas(itens)), 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
 function exportTimelineJson() { dlTimelineJson(filteredTimeline()); }
 function exportTimelineCsv() { dlTimelineCsv(filteredTimeline()); }
 function exportAcompTabelaJson() { dlTimelineJson(timelineItens()); }
 function exportAcompTabelaCsv() { dlTimelineCsv(timelineItens()); }
+
+/* "Exportar novas notas": lembra no navegador, por uid, qual foi a última nota já
+   mandada (o texto dela, "[dd/mm/aaaa] ..."), e da próxima vez só inclui o que vier
+   depois dela — sem repetir andamento já enviado ao gestor. Se o uid nunca foi
+   exportado, ou a última nota lembrada saiu da janela dos 15 comentários mais
+   recentes (ex.: ficou velha), manda tudo o que tiver agora — melhor repetir uma
+   nota antiga do que perder uma nova. */
+const LS_NOTAS_EXPORTADAS = 'djud_notas_exportadas_v1';
+function lerNotasExportadas() {
+  try { return JSON.parse(localStorage.getItem(LS_NOTAS_EXPORTADAS) || '{}'); } catch { return {}; }
+}
+function notasDoItem(it) { return (it.notas || '').split('\n').map(s => s.trim()).filter(Boolean); }
+function novasNotas(itens) {
+  const vistas = lerNotasExportadas();
+  const linhas = [];
+  for (const it of itens) {
+    const notas = notasDoItem(it);
+    if (!notas.length) continue;
+    const idx = vistas[it.uid] ? notas.indexOf(vistas[it.uid]) : -1;
+    const base = { uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url };
+    for (const n of (idx === -1 ? notas : notas.slice(idx + 1))) linhas.push({ ...base, notas: n });
+  }
+  return linhas;
+}
+function marcarNotasExportadas(itens) {
+  const vistas = lerNotasExportadas();
+  for (const it of itens) {
+    const notas = notasDoItem(it);
+    if (notas.length) vistas[it.uid] = notas[notas.length - 1];
+  }
+  localStorage.setItem(LS_NOTAS_EXPORTADAS, JSON.stringify(vistas));
+}
+function exportNovasNotasCsv() {
+  const itens = timelineItens();
+  const linhas = novasNotas(itens);
+  if (!linhas.length) { toast('Nenhuma nota nova desde a última exportação.'); return; }
+  dl('novas_notas_djud.csv', '﻿' + timelineCsv(linhas), 'text/csv');
+  marcarNotasExportadas(itens);
+}
 
 function importFile(f) {
   const r = new FileReader();
@@ -1123,6 +1170,7 @@ el('tlAno').addEventListener('change', e => { TL.ano = e.target.value; renderTim
 el('tlRefreshBtn').addEventListener('click', refreshTimelineLive);
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
+el('acompExpNovasBtn').addEventListener('click', exportNovasNotasCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
 el('acompExpCsvBtn').addEventListener('click', exportAcompTabelaCsv);
 el('fsBtn').addEventListener('click', () => {

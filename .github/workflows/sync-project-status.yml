@@ -25,10 +25,10 @@ name: Sincronizar status e prazos do Project
 #      tempo, não só o último comentário.
 #   5. se o Project tiver um campo de texto chamado "URL do entregável", o
 #      valor dele vira o "url" publicado (o link do produto de verdade —
-#      painel, planilha etc). Sem esse campo (ou sem valor numa issue), cai
-#      no link da própria issue no GitHub, como já era. Crie o campo com
-#      esse nome exato no Project (workflow "Criar campo no Project", tipo
-#      TEXT) quando quiser passar a apontar pro produto em vez da issue.
+#      painel, planilha etc). Sem esse campo (ou sem valor numa issue), o
+#      "url" fica em branco — não cai mais no link da issue no GitHub. Crie
+#      o campo com esse nome exato no Project (workflow "Criar campo no
+#      Project", tipo TEXT) e preencha por issue quando tiver o link da entrega.
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -135,7 +135,7 @@ jobs:
                   inicio: item.inicio.date,
                   termino: item.termino.date,
                   status: desired,
-                  url: urlCampo || c.url,
+                  url: urlCampo || '',
                 };
                 if (item.pct && typeof item.pct.number === 'number') registro.pct = Math.max(0, Math.min(100, Math.round(item.pct.number)));
                 try {
