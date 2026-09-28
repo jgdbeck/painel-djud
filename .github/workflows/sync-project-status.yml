@@ -14,10 +14,9 @@ name: Sincronizar status e prazos do Project
 #      os dois preenchidos simplesmente não entra no arquivo.
 #   3. se o Project também tiver um campo numérico chamado "% Complete", o
 #      valor dele vai junto em timeline-data.json como "pct". Sem esse campo
-#      (ou sem valor numa issue), o painel calcula um % aproximado a partir
-#      do Status (Backlog/Parado = 0%, Em andamento = 50%, Finalizado ou
-#      Registrado no relatório = 100%) — crie o campo com esse nome exato
-#      no Project quando quiser um % de verdade em vez da aproximação.
+#      (ou sem valor numa issue), "pct" não é publicado e o painel mostra
+#      "% não informado" — ele não chuta mais um número a partir do Status.
+#      Crie o campo com esse nome exato no Project pra ter o % de verdade.
 #   4. publica também "notas": um registro de TODOS os comentários da issue
 #      (até os 15 mais recentes), cada um com a data, tipo "[10/09/2026]
 #      texto do comentário...". É a coluna Notas da tabela do Acompanhamento

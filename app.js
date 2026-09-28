@@ -378,7 +378,7 @@ function renderAcompTabela() {
         <td>${esc(it.entregavel)}</td>
         <td>${fmtBr(it.inicio)}</td>
         <td>${fmtBr(it.termino)}</td>
-        <td>${it.pct}%</td>
+        <td>${typeof it.pct === 'number' ? it.pct + '%' : '—'}</td>
         <td>${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a>` : '—'}</td>
         <td class="acomp-notas">${esc(it.notas || '—')}</td>
       </tr>`).join('')}</tbody>
@@ -630,19 +630,21 @@ const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'J
    tiver os dois campos preenchidos no Project, ela não entra nesse arquivo — por
    isso TIMELINE_DEMO continua servindo de exemplo/plano de fundo até o Project
    estar totalmente preenchido. Busca é best-effort: falha em silêncio (inclusive
-   em file://, onde fetch de arquivo local é bloqueado) e cai no exemplo. O % vem
-   do campo "% Complete" do Project quando ele existir; sem esse campo, o workflow
-   não manda "pct" e aqui cai na aproximação por Status (GH_PCT). */
+   em file://, onde fetch de arquivo local é bloqueado) e cai no exemplo. O % só
+   vem do campo "% Complete" do Project — sem esse campo numa issue, o workflow
+   não manda "pct" e aqui vira null (pctTexto mostra "% não informado"); nada de
+   chutar um número a partir do Status, que não é a mesma informação. */
 let TIMELINE_LIVE = null;
 async function loadTimelineLive() {
   try {
     const r = await fetch('timeline-data.json', { cache: 'no-store' }); // sem isso o navegador podia servir uma versão velha
     if (!r.ok) throw new Error('sem timeline-data.json');
     const list = await r.json();
-    TIMELINE_LIVE = list.map(it => ({ ...it, pct: typeof it.pct === 'number' ? it.pct : (GH_PCT[it.status] ?? 0) }));
+    TIMELINE_LIVE = list.map(it => ({ ...it, pct: typeof it.pct === 'number' ? it.pct : null }));
   } catch (e) { TIMELINE_LIVE = []; }
   return TIMELINE_LIVE;
 }
+function pctTexto(pct) { return typeof pct === 'number' ? `${pct}% concluído` : '% não informado'; }
 async function refreshTimelineLive() {
   TIMELINE_LIVE = null;
   el('tlArea').innerHTML = '<div class="loading">Atualizando a partir do GitHub…</div>';
@@ -715,7 +717,7 @@ function renderTimelineLista(area, items) {
         <span class="tl-row-tit">${esc(it.entregavel)}</span>
         <span class="tl-row-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
         <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · <span class="${prazo.atraso ? 'tl-atraso' : ''}">${prazo.texto}</span></span>
-        <span class="tl-pct">${it.pct}% concluído</span>
+        <span class="tl-pct">${pctTexto(it.pct)}</span>
       </a>`; }).join('');
     area.appendChild(panel);
   });
@@ -865,12 +867,12 @@ function calLegendHTML(doMes, mapaCores, semEntregavelTexto) {
   return '<div class="tl-cal-legend">' + doMes.map(it => {
     const cor = mapaCores.get(it.uid);
     const prazo = prazoBadge(it.termino);
-    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" ${hrefAttr(it.url)} target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}% concluído · ${prazo.texto}">
+    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" ${hrefAttr(it.url)} target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${pctTexto(it.pct)} · ${prazo.texto}">
         <span class="tl-cal-item-dot"></span>
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-cal-item-tit">${esc(it.entregavel)}</span>
         <span class="tl-cal-item-dias${prazo.atraso ? ' tl-atraso' : ''}">${prazo.texto}</span>
-        <span class="tl-pct">${it.pct}% concluído</span>
+        <span class="tl-pct">${pctTexto(it.pct)}</span>
       </a>`;
   }).join('') + '</div>';
 }
