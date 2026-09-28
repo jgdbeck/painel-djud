@@ -1047,46 +1047,35 @@ function exportTimelineCsv() { dlTimelineCsv(filteredTimeline()); }
 function exportAcompTabelaJson() { dlTimelineJson(timelineItens()); }
 function exportAcompTabelaCsv() { dlTimelineCsv(timelineItens()); }
 
-/* "Exportar novas notas": lembra no navegador, por uid, qual foi a última nota já
-   mandada (o texto dela, "[dd/mm/aaaa] ..."), e da próxima vez só inclui o que vier
-   depois dela — sem repetir andamento já enviado ao gestor. Se o uid nunca foi
-   exportado, ou a última nota lembrada saiu da janela dos 15 comentários mais
-   recentes (ex.: ficou velha), manda tudo o que tiver agora — melhor repetir uma
-   nota antiga do que perder uma nova. */
-const LS_NOTAS_EXPORTADAS = 'djud_notas_exportadas_v1';
-function lerNotasExportadas() {
-  try { return JSON.parse(localStorage.getItem(LS_NOTAS_EXPORTADAS) || '{}'); } catch { return {}; }
-}
+/* "Exportar notas do período": sempre pergunta a data inicial/final (campos
+   #acompNotasDe/#acompNotasAte, pré-preenchidos com os últimos 7 dias) e manda só
+   as notas cuja data_nota cai nesse intervalo (inclusive nas duas pontas) — em vez
+   de tentar lembrar sozinho o que já foi mandado antes. */
 function notasDoItem(it) { return (it.notas || '').split('\n').map(s => s.trim()).filter(Boolean); }
-function novasNotas(itens) {
-  const vistas = lerNotasExportadas();
+function notasNoPeriodo(itens, de, ate) {
   const linhas = [];
   for (const it of itens) {
-    const notas = notasDoItem(it);
-    if (!notas.length) continue;
-    const idx = vistas[it.uid] ? notas.indexOf(vistas[it.uid]) : -1;
     const base = { uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url };
-    for (const n of (idx === -1 ? notas : notas.slice(idx + 1))) {
+    for (const n of notasDoItem(it)) {
       const { data, texto } = partirNota(n);
-      linhas.push({ ...base, data_nota: data, nota: texto });
+      if (data && data >= de && data <= ate) linhas.push({ ...base, data_nota: data, nota: texto });
     }
   }
   return linhas;
 }
-function marcarNotasExportadas(itens) {
-  const vistas = lerNotasExportadas();
-  for (const it of itens) {
-    const notas = notasDoItem(it);
-    if (notas.length) vistas[it.uid] = notas[notas.length - 1];
-  }
-  localStorage.setItem(LS_NOTAS_EXPORTADAS, JSON.stringify(vistas));
+function preencherPeriodoNotasPadrao() {
+  const ate = new Date(); const de = new Date(ate); de.setDate(de.getDate() - 7);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  if (!el('acompNotasDe').value) el('acompNotasDe').value = iso(de);
+  if (!el('acompNotasAte').value) el('acompNotasAte').value = iso(ate);
 }
-function exportNovasNotasCsv() {
-  const itens = timelineItens();
-  const linhas = novasNotas(itens);
-  if (!linhas.length) { toast('Nenhuma nota nova desde a última exportação.'); return; }
-  dl('novas_notas_djud.csv', '﻿' + timelineCsv(linhas), 'text/csv');
-  marcarNotasExportadas(itens);
+function exportNotasPeriodoCsv() {
+  const de = el('acompNotasDe').value, ate = el('acompNotasAte').value;
+  if (!de || !ate) { toast('Escolha a data inicial e final do período.', true); return; }
+  if (de > ate) { toast('A data inicial não pode ser depois da final.', true); return; }
+  const linhas = notasNoPeriodo(timelineItens(), de, ate);
+  if (!linhas.length) { toast('Nenhuma nota nesse período.'); return; }
+  dl(`notas_${de}_a_${ate}.csv`, '﻿' + timelineCsv(linhas), 'text/csv');
 }
 
 function importFile(f) {
@@ -1210,7 +1199,8 @@ el('tlAno').addEventListener('change', e => { TL.ano = e.target.value; renderTim
 el('tlRefreshBtn').addEventListener('click', refreshTimelineLive);
 el('tlExpJsonBtn').addEventListener('click', exportTimelineJson);
 el('tlExpCsvBtn').addEventListener('click', exportTimelineCsv);
-el('acompExpNovasBtn').addEventListener('click', exportNovasNotasCsv);
+preencherPeriodoNotasPadrao();
+el('acompExpNovasBtn').addEventListener('click', exportNotasPeriodoCsv);
 el('acompExpJsonBtn').addEventListener('click', exportAcompTabelaJson);
 el('acompExpCsvBtn').addEventListener('click', exportAcompTabelaCsv);
 el('fsBtn').addEventListener('click', () => {
