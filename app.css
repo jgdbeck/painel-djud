@@ -270,6 +270,7 @@ label.f{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-
 .tl-cal-item-dot{width:9px;height:9px;border-radius:50%;background:var(--cor);flex:none;box-shadow:0 0 0 1px rgba(27,36,48,.18)}
 .tl-cal-item-tit{flex:1;min-width:0;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tl-cal-item-dias{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.tl-atraso{color:var(--cx-mu);font-weight:700}
 
 /* linha do tempo — visualização em lista */
 .tl-month{margin-bottom:14px}

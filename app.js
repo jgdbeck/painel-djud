@@ -710,19 +710,33 @@ function renderTimelineLista(area, items) {
     const panel = document.createElement('div');
     panel.className = 'panel tl-month';
     panel.innerHTML = `<h3>${MESES_PT[m]} ${y}</h3>` +
-      doMes.map(it => `<a class="tl-row" ${hrefAttr(it.url)} target="_blank" rel="noopener">
+      doMes.map(it => { const prazo = prazoBadge(it.termino); return `<a class="tl-row" ${hrefAttr(it.url)} target="_blank" rel="noopener">
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-row-tit">${esc(it.entregavel)}</span>
         <span class="tl-row-grupo">${esc(TL_GRUPO_LABEL[it.grupo] || '')}</span>
-        <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${diasEntre(it.inicio, it.termino)} dia(s)</span>
-        <span class="tl-pct">${it.pct}%</span>
-      </a>`).join('');
+        <span class="tl-row-dates">${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · <span class="${prazo.atraso ? 'tl-atraso' : ''}">${prazo.texto}</span></span>
+        <span class="tl-pct">${it.pct}% concluído</span>
+      </a>`; }).join('');
     area.appendChild(panel);
   });
 }
 
 function diasEntre(isoA, isoB) {
   return Math.round((new Date(isoB + 'T00:00:00') - new Date(isoA + 'T00:00:00')) / 86400000) + 1;
+}
+
+/* diasEntre() dá o tamanho TOTAL do prazo (início→término) — não é a mesma coisa
+   que "quantos dias faltam", e as duas coisas do lado do "%" confundiam. Isto
+   aqui é o que realmente falta, contado a partir de hoje; negativo = atrasado. */
+function diasRestantes(termino) {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  return Math.round((new Date(termino + 'T00:00:00') - hoje) / 86400000);
+}
+function prazoBadge(termino) {
+  const r = diasRestantes(termino);
+  if (r > 0) return { texto: `${r}d p/ o prazo`, atraso: false };
+  if (r === 0) return { texto: 'prazo é hoje', atraso: false };
+  return { texto: `${-r}d atrasado`, atraso: true };
 }
 
 /* Cor por entregável (não por mês) — fica igual em todos os blocos em que o
@@ -850,13 +864,13 @@ function calLegendHTML(doMes, mapaCores, semEntregavelTexto) {
   if (!doMes.length) return `<div class="hint">${semEntregavelTexto || 'Nenhum entregável ativo neste mês.'}</div>`;
   return '<div class="tl-cal-legend">' + doMes.map(it => {
     const cor = mapaCores.get(it.uid);
-    const duracao = diasEntre(it.inicio, it.termino);
-    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" ${hrefAttr(it.url)} target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${duracao} dia(s) · ${it.pct}%">
+    const prazo = prazoBadge(it.termino);
+    return `<a class="tl-cal-item" data-uid="${esc(it.uid)}" style="--cor:${cor}" ${hrefAttr(it.url)} target="_blank" rel="noopener" title="${esc(it.entregavel)} · ${fmtBr(it.inicio)} – ${fmtBr(it.termino)} · ${it.pct}% concluído · ${prazo.texto}">
         <span class="tl-cal-item-dot"></span>
         <span class="ghnum">#${esc(it.uid)}</span>
         <span class="tl-cal-item-tit">${esc(it.entregavel)}</span>
-        <span class="tl-cal-item-dias">${duracao}d</span>
-        <span class="tl-pct">${it.pct}%</span>
+        <span class="tl-cal-item-dias${prazo.atraso ? ' tl-atraso' : ''}">${prazo.texto}</span>
+        <span class="tl-pct">${it.pct}% concluído</span>
       </a>`;
   }).join('') + '</div>';
 }
