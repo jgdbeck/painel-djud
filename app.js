@@ -347,17 +347,30 @@ async function renderDash() {
     <div class="panel"><h3>Execução por meta</h3><div class="hint">Percentual médio (aproximado) em cada meta do roadmap.</div>${barRows(byMeta)}</div></div>`;
 }
 
+/* cada nota chega do sync do Project como "[dd/mm/aaaa] texto" — um prefixo de data
+   dentro do próprio texto. Aqui isso vira dois campos de verdade (data ISO, igual
+   início/término, + o texto sem o prefixo), pra dar pra ordenar/filtrar por data
+   num histórico de verdade em vez de ler a data dentro da string. */
+const NOTA_RE = /^\[(\d{2})\/(\d{2})\/(\d{4})\]\s*/;
+function partirNota(nota) {
+  const m = NOTA_RE.exec(nota);
+  return m ? { data: `${m[3]}-${m[2]}-${m[1]}`, texto: nota.slice(m[0].length) } : { data: '', texto: nota };
+}
+
 /* explode notas num registro por atualização: repete uid/entregável/início/término/%/url
-   e cada nota (já vem "[dd/mm/aaaa] texto", uma por linha, do sync do Project) vira sua
-   própria linha — é o formato que o gestor usa pra colar/importar no Project dele. Sem
-   notas, o entregável ainda aparece, com uma linha só e notas em branco. */
+   e cada nota (uma por linha, do sync do Project) vira sua própria linha, com data e
+   texto em campos separados — é o formato que o gestor usa pra colar/importar no
+   Project dele. Sem notas, o entregável ainda aparece, com uma linha só em branco. */
 function explodeNotas(itens) {
   const linhas = [];
   for (const it of itens) {
     const base = { uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url };
     const notas = (it.notas || '').split('\n').map(s => s.trim()).filter(Boolean);
-    if (!notas.length) linhas.push({ ...base, notas: '' });
-    else for (const n of notas) linhas.push({ ...base, notas: n });
+    if (!notas.length) linhas.push({ ...base, data_nota: '', nota: '' });
+    else for (const n of notas) {
+      const { data, texto } = partirNota(n);
+      linhas.push({ ...base, data_nota: data, nota: texto });
+    }
   }
   return linhas;
 }
@@ -372,7 +385,7 @@ function renderAcompTabela() {
   const linhas = explodeNotas(itens);
   area.innerHTML = `<div class="panel" style="overflow-x:auto">
     <table class="acomp-tabela">
-      <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th><th>Notas</th></tr></thead>
+      <thead><tr><th>UID</th><th>Entregável</th><th>Início</th><th>Término</th><th>%</th><th>URL</th><th>Data</th><th>Nota</th></tr></thead>
       <tbody>${linhas.map(it => `<tr>
         <td class="ghnum">#${esc(it.uid)}</td>
         <td>${esc(it.entregavel)}</td>
@@ -380,7 +393,8 @@ function renderAcompTabela() {
         <td>${fmtBr(it.termino)}</td>
         <td>${typeof it.pct === 'number' ? it.pct + '%' : '—'}</td>
         <td>${it.url ? `<a href="${esc(it.url)}" target="_blank" rel="noopener">Abrir ↗</a>` : '—'}</td>
-        <td class="acomp-notas">${esc(it.notas || '—')}</td>
+        <td class="ghnum">${it.data_nota ? fmtBr(it.data_nota) : '—'}</td>
+        <td class="acomp-notas">${esc(it.nota || '—')}</td>
       </tr>`).join('')}</tbody>
     </table>
   </div>`;
@@ -1002,11 +1016,18 @@ function exportCsv() {
   dl('demandas_djud.csv', '﻿' + csv, 'text/csv');   // BOM: o Excel precisa dele para os acentos
 }
 
-const TIMELINE_CSV_COLS = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'];
-const TIMELINE_CSV_HEADER = 'uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas';
+/* pct_andamento sai como fração (0,5 = 50%), com vírgula — é o formato que o Excel
+   PT-BR e o Project do gestor esperam num campo de percentual; "50" cru seria lido
+   como 5000%. Sem % informado, a célula fica em branco (não "0"). */
+function pctCsv(pct) { return typeof pct === 'number' ? (pct / 100).toString().replace('.', ',') : ''; }
+const TIMELINE_CSV_COLS = ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'data_nota', 'nota'];
+const TIMELINE_CSV_HEADER = 'uid,entregavel,data_inicio,data_termino,pct_andamento,url,data_nota,nota';
 function timelineCsv(linhas) {
   return [TIMELINE_CSV_HEADER]
-    .concat(linhas.map(it => TIMELINE_CSV_COLS.map(k => '"' + String(it[k] == null ? '' : it[k]).replace(/"/g, '""') + '"').join(',')))
+    .concat(linhas.map(it => TIMELINE_CSV_COLS.map(k => {
+      const v = k === 'pct' ? pctCsv(it.pct) : (it[k] == null ? '' : it[k]);
+      return '"' + String(v).replace(/"/g, '""') + '"';
+    }).join(',')))
     .join('\n');
 }
 
@@ -1045,7 +1066,10 @@ function novasNotas(itens) {
     if (!notas.length) continue;
     const idx = vistas[it.uid] ? notas.indexOf(vistas[it.uid]) : -1;
     const base = { uid: it.uid, entregavel: it.entregavel, inicio: it.inicio, termino: it.termino, pct: it.pct, url: it.url };
-    for (const n of (idx === -1 ? notas : notas.slice(idx + 1))) linhas.push({ ...base, notas: n });
+    for (const n of (idx === -1 ? notas : notas.slice(idx + 1))) {
+      const { data, texto } = partirNota(n);
+      linhas.push({ ...base, data_nota: data, nota: texto });
+    }
   }
   return linhas;
 }

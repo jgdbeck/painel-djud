@@ -143,7 +143,7 @@ async function demo() {
   // não pode encolher por causa de uma busca deixada em TL.q por outra aba)
   const linhasAntes = w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length;
   ok(linhasAntes > 0, 'tabela do Acompanhamento renderiza as linhas');
-  ok(w.document.getElementById('acompTabela').textContent.includes('Notas'), 'tabela do Acompanhamento tem a coluna Notas');
+  ok(w.document.getElementById('acompTabela').textContent.includes('Nota'), 'tabela do Acompanhamento tem a coluna Nota');
   t.TL.q = 'um texto que não bate com nenhum entregável';
   t.renderAcompTabela();
   eq(w.document.querySelectorAll('#acompTabela .acomp-tabela tbody tr').length, linhasAntes, 'tabela do Acompanhamento ignora a busca da Linha do tempo');
@@ -213,9 +213,9 @@ async function demo() {
   t.exportTimelineJson(); t.exportTimelineCsv();
   eq(downloads.length, 4, 'exportar a linha do tempo gera mais 1 download JSON e 1 CSV');
   const tlJson = JSON.parse(await downloads[2].text());
-  ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'notas'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 7 colunas esperadas (com notas)');
+  ok(tlJson.length > 0 && ['uid', 'entregavel', 'inicio', 'termino', 'pct', 'url', 'data_nota', 'nota'].every(k => k in tlJson[0]), 'JSON da linha do tempo tem as 8 colunas esperadas (data e nota separadas)');
   const tlCsv = await downloads[3].text();
-  ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url,notas'), 'CSV da linha do tempo tem o cabeçalho esperado');
+  ok(tlCsv.includes('uid,entregavel,data_inicio,data_termino,pct_andamento,url,data_nota,nota'), 'CSV da linha do tempo tem o cabeçalho esperado');
 
   // exportar a tabela do Acompanhamento: mesmas 6 colunas, mas sempre a lista completa
   t.exportAcompTabelaJson(); t.exportAcompTabelaCsv();
