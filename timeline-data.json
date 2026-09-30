@@ -28,12 +28,12 @@
   },
   {
     "uid": "156",
-    "entregavel": "Painel de medicamentos mais judicializados REDMINE",
+    "entregavel": "Painel de medicamentos mais judicializados REDMINE/SISMAT",
     "inicio": "2026-11-03",
     "termino": "2026-12-26",
     "status": "Em andamento",
     "url": "",
-    "notas": "[08/09/2026] Usaremos as informações do REDMINE para essa demanda, estamos ainda solicitando acesso junto ao DJUD.\n[10/09/2026] Acesso ao **RedMine** liberado hoje (10/09) — o recorte por UF (100% RedMine) já pode ser feito; o ranking de medicamentos mais judicializados ainda depende de acesso aos documentos do SEI para o cruz\n[14/09/2026] **Sugestão técnica do Andrei** sobre como deduzir a UF pelo número do processo (CNJ): Formato: `NNNNNNN-DD.AAAA.J.TR.CCCC` - **NNNNNNN**: sequencial de autuação do processo na origem, reiniciado a cad\n[14/09/2026] [resultado_analise_redmine.xlsx](https://github.com/user-attachments/files/32207921/resultado_analise_redmine.xlsx) Análise inicial de coluna, total de registros, total de registros únicos, total e % \n[17/09/2026] Repassada necessidade de levantamentos linkando os medicamentos a Advogados, Médicos e Tribunais. Há possibilidade de realizar análise nos dados com técnicas de mineração de dados como clustering, reg"
+    "notas": "[08/09/2026] Usaremos as informações do REDMINE para essa demanda, estamos ainda solicitando acesso junto ao DJUD.\n[10/09/2026] Acesso ao **RedMine** liberado hoje (10/09) — o recorte por UF (100% RedMine) já pode ser feito; o ranking de medicamentos mais judicializados ainda depende de acesso aos documentos do SEI para o cruz\n[14/09/2026] **Sugestão técnica do Andrei** sobre como deduzir a UF pelo número do processo (CNJ): Formato: `NNNNNNN-DD.AAAA.J.TR.CCCC` - **NNNNNNN**: sequencial de autuação do processo na origem, reiniciado a cad\n[14/09/2026] [resultado_analise_redmine.xlsx](https://github.com/user-attachments/files/32207921/resultado_analise_redmine.xlsx) Análise inicial de coluna, total de registros, total de registros únicos, total e % \n[17/09/2026] Repassada necessidade de levantamentos linkando os medicamentos a Advogados, Médicos e Tribunais. Há possibilidade de realizar análise nos dados com técnicas de mineração de dados como clustering, reg\n[30/09/2026] Vamos utilizar a base do Sharepoint para a criação do painel, os dados do REDMINE não estão muito confiáveis. Estamos aguardando Douglas repassar as planilhas das áreas para analisarmos. Ontem tivemos"
   },
   {
     "uid": "159",
