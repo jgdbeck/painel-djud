@@ -19,15 +19,6 @@
     "notas": "[16/09/2026] Precisamos fazer um levantamento sobre essa demanda dos dados que precisamos do acesso ao SAPIENS.\n[17/09/2026] Levantamento passado pelo Andrei Número do processo judicial e NUP administrativo; Tribunal, vara e unidade da AGU responsável; Identificação do paciente, preferencialmente CPF, para evitar duplicidad"
   },
   {
-    "uid": "180",
-    "entregavel": "Painel de medicamentos mais judicializados (SISMAT + FUNDO)",
-    "inicio": "2026-09-28",
-    "termino": "2026-11-16",
-    "status": "Finalizado",
-    "url": "",
-    "notas": "[01/10/2026] Fechando como duplicada: o escopo desta issue (SISMAT + FUNDO) é o mesmo trabalho já registrado em #152 (Painel de estoque (SISMAT) + remanejamento), que inclui também a aba do fundo. Andamento e atua"
-  },
-  {
     "uid": "156",
     "entregavel": "Painel de medicamentos mais judicializados REDMINE/SISMAT",
     "inicio": "2026-11-03",
