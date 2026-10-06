@@ -273,7 +273,7 @@ async function renderHomeSummary() {
   const area = el('homeSummary');
   if (!ISSUES && !issuesLoading) {
     issuesLoading = true;
-    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    area.innerHTML = '<div class="loading">Carregando as issues, aguarde…</div>';
     try { ISSUES = await fetchIssues(); }
     catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
     issuesLoading = false;
@@ -282,8 +282,8 @@ async function renderHomeSummary() {
   if (issuesLoading) return;
   const items = ISSUES || [];
   const n = items.length, exec = avg(items.map(ghPct));
-  const con = items.filter(iss => ghColumn(iss) === 'Finalizado' || ghColumn(iss) === 'Registrado no relatório').length;
-  const and = items.filter(iss => ghColumn(iss) === 'Em andamento').length;
+  const con = items.filter(iss => colunaDe(iss).concluida).length;
+  const and = items.filter(iss => colunaDe(iss).andamento).length;
   const byMeta = METAS.map(meta => { const g = items.filter(iss => ghMeta(iss.labels) === meta); return { label: meta.replace(/^Meta \d: /, ''), n: g.length, pct: avg(g.map(ghPct)) }; });
   area.innerHTML = `
     <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px">
@@ -301,9 +301,32 @@ async function renderHomeSummary() {
 /* Acompanhamento lê as issues do GitHub (mesma fonte do Roadmap), não mais a planilha de
    demandas. GitHub não tem um campo de "% concluído" por issue ainda (só o Status do
    Project); enquanto isso não existir, o % é aproximado a partir do próprio Status. */
-const GH_PCT = { 'Backlog': 0, 'Parado': 0, 'Em andamento': 50, 'Finalizado': 100, 'Registrado no relatório': 100 };
+/* Duas fontes de issues, cada uma com as suas colunas:
+   - GitHub (padrão): as 5 opções do Status do Project, espelhadas em labels;
+   - GitLab (CONFIG.ISSUES_JSON preenchido): as colunas do board do codigos.ufsc.br,
+     que são as labels status:: mais "Closed". O arquivo vem pronto do pipeline
+     (painel/exportar_gitlab.py), já com a coluna calculada em `column`.
+   `pct` é a aproximação do % a partir da coluna; `concluida`/`andamento` alimentam
+   os contadores do Início. */
+const FONTE_GITLAB = typeof CONFIG !== 'undefined' && !!CONFIG.ISSUES_JSON;
+const RCOLS = (FONTE_GITLAB ? [
+  { key: 'backlog do projeto', cor: '#8A8F98', pct: 0 },
+  { key: 'backlog de sprint', cor: '#6699cc', pct: 0 },
+  { key: 'em andamento', cor: 'var(--st-and)', pct: 50, andamento: true },
+  { key: 'em validação', cor: '#c17d10', pct: 50 },
+  { key: 'impedida', cor: 'var(--st-nao)', pct: 0 },
+  { key: 'Closed', cor: 'var(--st-con)', pct: 100, concluida: true },
+] : [
+  { key: 'Backlog', cor: '#8A8F98', pct: 0 },
+  { key: 'Parado', cor: 'var(--st-nao)', pct: 0 },
+  { key: 'Em andamento', cor: 'var(--st-and)', pct: 50, andamento: true },
+  { key: 'Finalizado', cor: 'var(--st-con)', pct: 100, concluida: true },
+  { key: 'Registrado no relatório', cor: 'var(--exec)', pct: 100, concluida: true },
+]).map(c => ({ ...c, label: c.key }));
+const GH_PCT = Object.fromEntries(RCOLS.map(c => [c.key, c.pct]));
 const ghPct = iss => GH_PCT[ghColumn(iss)] ?? 0;
-const GH_STATUS_COR = { 'Backlog': '#8A8F98', 'Parado': 'var(--st-nao)', 'Em andamento': 'var(--st-and)', 'Finalizado': 'var(--st-con)', 'Registrado no relatório': 'var(--exec)' };
+const GH_STATUS_COR = Object.fromEntries(RCOLS.map(c => [c.key, c.cor]));
+const colunaDe = iss => RCOLS.find(c => c.key === ghColumn(iss)) || RCOLS[0];
 
 function filteredDash() {
   return (ISSUES || []).filter(iss => {
@@ -317,7 +340,7 @@ async function renderDash() {
   const area = el('dashArea');
   if (!ISSUES && !issuesLoading) {
     issuesLoading = true;
-    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    area.innerHTML = '<div class="loading">Carregando as issues, aguarde…</div>';
     try { ISSUES = await fetchIssues(); }
     catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
     issuesLoading = false;
@@ -517,10 +540,17 @@ const RF = { meta: '', q: '' };
    A API pública de issues não enxerga esse campo (exige login), então o
    workflow .github/workflows/sync-project-status.yml lê o Project e
    grava o status como label na issue — é essa label que a coluna usa. */
-const RCOLS = ['Backlog', 'Parado', 'Em andamento', 'Finalizado', 'Registrado no relatório'].map(label => ({ key: label, label }));
-const ghColumn = iss => (iss.labels || []).find(x => RCOLS.some(c => c.key === x.name))?.name || 'Backlog';
+const ghColumn = iss => (RCOLS.some(c => c.key === iss.column) && iss.column)
+  || (iss.labels || []).find(x => RCOLS.some(c => c.key === x.name))?.name || RCOLS[0].key;
 
 async function fetchIssues() {
+  if (FONTE_GITLAB) {
+    let r;
+    try { r = await fetch(CONFIG.ISSUES_JSON, { cache: 'no-store' }); }
+    catch (e) { throw new Error('Não foi possível carregar as issues do GitLab. Verifique a conexão.'); }
+    if (!r.ok) throw new Error('Não foi possível carregar as issues do GitLab (HTTP ' + r.status + '). O pipeline já rodou?');
+    return await r.json();
+  }
   const repo = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '';
   if (!repo) throw new Error('Configure CONFIG.GITHUB_REPO em config.js.');
   let r;
@@ -542,6 +572,12 @@ function ghDesc(body) {
 
 function fillRoadmapSelect() {
   el('rfmeta').innerHTML = '<option value="">Meta: todas</option>' + METAS.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  if (FONTE_GITLAB) {
+    el('roadmapRepo').textContent = CONFIG.GITLAB_PROJECT || 'GitLab';
+    el('rGhLink').href = CONFIG.GITLAB_BOARD_URL || '#';
+    el('rGhLink').textContent = 'Abrir no GitLab ↗';
+    return;
+  }
   el('roadmapRepo').textContent = (typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || '(não configurado)';
   el('rGhLink').href = `https://github.com/${(typeof CONFIG !== 'undefined' && CONFIG.GITHUB_REPO) || ''}/issues`;
 }
@@ -602,7 +638,7 @@ async function renderRoadmap() {
   const area = el('roadmapArea');
   if (!ISSUES && !issuesLoading) {
     issuesLoading = true;
-    area.innerHTML = '<div class="loading">Carregando as issues do GitHub, aguarde…</div>';
+    area.innerHTML = '<div class="loading">Carregando as issues, aguarde…</div>';
     try { ISSUES = await fetchIssues(); }
     catch (err) { area.innerHTML = `<div class="empty">${esc(err.message)}</div>`; issuesLoading = false; return; }
     issuesLoading = false;
@@ -610,7 +646,7 @@ async function renderRoadmap() {
   }
   if (issuesLoading) return;
   const items = filteredIssues();
-  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">Coluna espelha o Status do Project (sincroniza a cada ~20min) · clique em “Atualizar” para recarregar</span>`;
+  el('roadmapLegend').innerHTML = `<span class="k">${items.length} issue(s)</span><span class="k" style="color:#9AA6B4">${FONTE_GITLAB ? 'Colunas espelham as labels status:: do board do GitLab' : 'Coluna espelha o Status do Project'} (sincroniza a cada ~20min) · clique em “Atualizar” para recarregar</span>`;
   area.innerHTML = '';
   if (!items.length) { area.innerHTML = '<div class="empty">Nenhuma issue encontrada com esse filtro.</div>'; return; }
   const wrap = document.createElement('div');
@@ -661,7 +697,7 @@ async function loadTimelineLive() {
 function pctTexto(pct) { return typeof pct === 'number' ? `${pct}% concluído` : '% não informado'; }
 async function refreshTimelineLive() {
   TIMELINE_LIVE = null;
-  el('tlArea').innerHTML = '<div class="loading">Atualizando a partir do GitHub…</div>';
+  el('tlArea').innerHTML = '<div class="loading">Atualizando…</div>';
   await loadTimelineLive();
   renderTimeline();
 }
@@ -709,7 +745,7 @@ function renderTimeline() {
   const area = el('tlArea');
   const items = filteredTimeline();
   const usaLive = typeof TIMELINE_LIVE !== 'undefined' && TIMELINE_LIVE && TIMELINE_LIVE.length;
-  el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">${usaLive ? 'UID, início e término vêm do Project do GitHub (campos Start date / Target date)' : 'UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com o GitHub'}</span>`;
+  el('tlLegend').innerHTML = `<span class="k">${items.length} entregável(is)</span><span class="k" style="color:#9AA6B4">${usaLive ? (FONTE_GITLAB ? 'UID, início e término vêm das issues do GitLab (datas de início e prazo)' : 'UID, início e término vêm do Project do GitHub (campos Start date / Target date)') : 'UID, início, término e % vêm de um exemplo calculado à mão; ainda não sincroniza com ' + (FONTE_GITLAB ? 'o GitLab' : 'o GitHub')}</span>`;
   document.querySelectorAll('#tlView button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlview === TL.view)));
   document.querySelectorAll('#tlFoco button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tlfoco === TL.foco)));
   el('tlFoco').classList.toggle('hidden', TL.view !== 'calendario');

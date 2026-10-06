@@ -31,7 +31,7 @@ const PONTE = `window.__t = {
   doLogin, forgetPass
 };`;
 
-async function build({ sheetApi = '', storage = null, fetchImpl = null } = {}) {
+async function build({ sheetApi = '', storage = null, fetchImpl = null, issuesJson = '' } = {}) {
   const html = read('index.html').replace(/<script src="[^"]+"><\/script>/g, '');
   const dom = new JSDOM(html, { url: 'https://exemplo.org/', runScripts: 'dangerously', pretendToBeVisual: true });
   const w = dom.window;
@@ -44,7 +44,8 @@ async function build({ sheetApi = '', storage = null, fetchImpl = null } = {}) {
   w.HTMLAnchorElement.prototype.click = function () {};
   if (fetchImpl) w.fetch = fetchImpl;
   const run = code => { const s = w.document.createElement('script'); s.textContent = code; w.document.body.appendChild(s); };
-  run(read('config.js').replace('SHEET_API: ""', `SHEET_API: ${JSON.stringify(sheetApi)}`));
+  run(read('config.js').replace(/SHEET_API: "[^"]*"/, `SHEET_API: ${JSON.stringify(sheetApi)}`)
+    .replace(/ISSUES_JSON: "[^"]*"/, `ISSUES_JSON: ${JSON.stringify(issuesJson)}`));
   run(read('data.js'));
   run(read('app.js'));
   run(PONTE);
@@ -365,8 +366,40 @@ async function seguranca() {
   ok(card.querySelector('.card-title').textContent.includes('<img'), 'título aparece como texto literal');
 }
 
+/* ============ ISSUES DO GITLAB (arquivo gerado pelo pipeline) ============ */
+async function gitlab() {
+  console.log('\n== Roadmap lendo o GitLab (gitlab-data.json) ==');
+  const FAKE = [
+    { number: 2, title: 'Painel X', body: '## Descricao\nTexto', state: 'open', html_url: 'https://codigos.ufsc.br/x/-/issues/2',
+      labels: [{ name: 'status::em andamento' }, { name: 'Prioridade 2' }, { name: 'Complexidade Média' }, { name: 'Meta 2: Analytics descritivo (painéis)' }],
+      assignees: [{ login: 'Fulana' }], updated_at: '2026-10-05T12:00:00Z', comments: 3, column: 'em andamento' },
+    { number: 3, title: 'Fechada', body: '', state: 'closed', html_url: 'https://codigos.ufsc.br/x/-/issues/3', labels: [], assignees: [], updated_at: '2026-10-05T12:00:00Z', comments: 0, column: 'Closed' },
+    { number: 4, title: 'Sem coluna conhecida', body: '', state: 'open', html_url: 'https://codigos.ufsc.br/x/-/issues/4', labels: [], assignees: [], updated_at: '2026-10-05T12:00:00Z', comments: 0, column: 'xyz' },
+  ];
+  const pedidos = [];
+  const { w, t } = await build({ issuesJson: 'gitlab-data.json', fetchImpl: async (url, opts) => {
+    pedidos.push({ url: String(url), opts });
+    if (String(url).includes('gitlab-data.json')) return { ok: true, json: async () => FAKE };
+    return { ok: false, status: 404, json: async () => ({}) };
+  } });
+  t.go('roadmap'); await tick(); await tick(); await tick();
+  ok(!pedidos.some(p => p.url.includes('api.github.com')), 'não chama a API do GitHub');
+  ok(pedidos.some(p => p.url.includes('gitlab-data.json') && p.opts && p.opts.cache === 'no-store'), 'lê gitlab-data.json sem cache');
+  const heads = [...w.document.querySelectorAll('#roadmapArea .col-head .lbl')].map(n => n.textContent);
+  eq(heads.join('|'), 'backlog do projeto|backlog de sprint|em andamento|em validação|impedida|Closed', 'colunas do board do GitLab');
+  const contagem = [...w.document.querySelectorAll('#roadmapArea .col')].map(c => c.querySelectorAll('.gh-card').length).join(',');
+  eq(contagem, '1,0,1,0,0,1', 'cada issue na sua coluna (coluna desconhecida cai na primeira)');
+  eq(w.document.getElementById('rGhLink').textContent, 'Abrir no GitLab ↗', 'botão aponta para o GitLab');
+  const card = w.document.querySelectorAll('#roadmapArea .col')[2].querySelector('.gh-card a');
+  eq(card.getAttribute('href'), 'https://codigos.ufsc.br/x/-/issues/2', 'card linka a issue do GitLab');
+  t.go('home'); await tick(); await tick();
+  const home = w.document.getElementById('homeSummary').textContent;
+  ok(/3\s*iniciativas/.test(home.replace(/\s+/g, ' ')), 'Início conta as 3 issues');
+}
+
 (async () => {
   await demo();
+  await gitlab();
   await normalizacao();
   await conectado();
   await seguranca();

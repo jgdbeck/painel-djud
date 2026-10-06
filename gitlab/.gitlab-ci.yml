@@ -1,0 +1,14 @@
+# Publica o Painel DJUD no GitLab Pages, alimentado pelas issues deste projeto.
+# Roda a cada push no main e pelo agendamento (Build → Pipeline schedules, a cada 20 min).
+# Precisa da variável GITLAB_TOKEN (read_api, mascarada e protegida) em Configurações → CI/CD.
+pages:
+  image: python:3.12-alpine
+  script:
+    - mkdir -p public
+    - cp painel/index.html painel/app.css painel/config.js painel/data.js painel/app.js public/
+    - python3 painel/exportar_gitlab.py public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
