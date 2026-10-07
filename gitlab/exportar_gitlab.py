@@ -38,6 +38,8 @@ COLUNAS = {
 PRIORIDADE = {"prioridade::p0": "Prioridade 1", "prioridade::p1": "Prioridade 2", "prioridade::p2": "Prioridade 3"}
 COMPLEXIDADE = {1: "Baixa", 2: "Média", 3: "Alta", 4: "Alta", 5: "Muito alta"}
 # rótulos do painel que só existem no texto das issues migradas ("Labels no GitHub: ...")
+# "**Andamento:** 25%" na descrição: o GitLab não tem campo de % por issue
+ANDAMENTO = re.compile(r"^\*\*Andamento:\*\*\s*(\d{1,3})\s*%", re.M)
 ORIGINAIS = re.compile(r"^(Meta \d.*|Condicional \(acesso/SEI\)|Estrutural \(sem prioridade\)|Prioridade A definir)$")
 
 
@@ -82,6 +84,11 @@ def coluna(issue):
     return next((COLUNAS[l] for l in issue["labels"] if l in COLUNAS), "backlog do projeto")
 
 
+def andamento(descricao):
+    m = ANDAMENTO.search(descricao or "")
+    return min(100, int(m.group(1))) if m else None
+
+
 def converter(issue):
     nomes = list(issue["labels"])
     prio = [PRIORIDADE[l] for l in issue["labels"] if l in PRIORIDADE]
@@ -100,6 +107,7 @@ def converter(issue):
         "updated_at": issue["updated_at"],
         "comments": issue.get("user_notes_count", 0),
         "column": coluna(issue),
+        "pct": andamento(issue.get("description")),
     }
 
 
@@ -174,6 +182,8 @@ def main():
             continue
         reg = {"uid": str(iid), "entregavel": por_iid[iid]["title"], "inicio": inicio, "termino": prazo,
                "status": por_iid[iid]["column"], "url": ""}
+        if por_iid[iid]["pct"] is not None:
+            reg["pct"] = por_iid[iid]["pct"]
         if por_iid[iid]["comments"]:
             reg["notas"] = notas(iid)
         linha.append(reg)
